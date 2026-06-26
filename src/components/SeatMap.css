@@ -1,0 +1,143 @@
+.seat-map-container { width: 100%; }
+
+/* Screen */
+.screen-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 2rem;
+}
+
+.screen-bar {
+  width: 65%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #2563eb, transparent);
+  border-radius: 2px;
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.4);
+}
+
+.screen-label span {
+  font-size: 0.62rem;
+  letter-spacing: 4px;
+  color: #334155;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Grid */
+.seat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #334155;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.seats { display: flex; gap: 0.25rem; }
+
+.seat {
+  width: 27px;
+  height: 24px;
+  border-radius: 4px 4px 2px 2px;
+  border: none;
+  font-size: 0.55rem;
+  font-weight: 600;
+  transition: transform 0.12s, background 0.12s;
+  position: relative;
+}
+
+.seat::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 15%;
+  right: 15%;
+  height: 3px;
+  background: inherit;
+  filter: brightness(0.65);
+  border-radius: 0 0 2px 2px;
+}
+
+.seat-available {
+  background: #0f2236;
+  color: #334155;
+  border: 1px solid #1a3050;
+}
+
+.seat-available:hover {
+  background: #1e3a5f;
+  border-color: #2563eb;
+  color: #94a3b8;
+  transform: scale(1.1);
+}
+
+.seat-selected {
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #3b82f6;
+  transform: scale(1.08);
+}
+
+.seat-selected:hover { background: #1d4ed8; }
+
+.seat-taken {
+  background: #05101f;
+  color: #0f2236;
+  border: 1px solid #0c1929;
+  cursor: not-allowed;
+}
+
+/* Aisle gap */
+.seat:nth-child(6) { margin-right: 0.75rem; }
+
+/* Legend */
+.seat-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.legend-swatch { width: 16px; height: 14px; border-radius: 3px; }
+
+.swatch-available { background: #0f2236; border: 1px solid #1a3050; }
+.swatch-selected  { background: #2563eb; }
+.swatch-taken     { background: #05101f; border: 1px solid #0c1929; }
+
+.selected-info {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .seat { width: 21px; height: 19px; font-size: 0.48rem; }
+  .seats { gap: 0.18rem; }
+  .seat:nth-child(6) { margin-right: 0.5rem; }
+}

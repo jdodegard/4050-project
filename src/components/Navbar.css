@@ -1,0 +1,116 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 2.5rem;
+  height: 60px;
+  background: #030c18;
+  border-bottom: 1px solid #0f2236;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Wordmark */
+.navbar-brand { display: flex; align-items: center; flex-shrink: 0; }
+
+.brand-cinema {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 2px;
+}
+
+.brand-book {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: 2px;
+}
+
+/* Search */
+.navbar-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 440px;
+  background: #0c1929;
+  border: 1px solid #1a3050;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.navbar-search:focus-within {
+  border-color: #2563eb;
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-left: 0.85rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.search-input::placeholder { color: #475569; }
+
+.search-btn {
+  padding: 0.5rem 1.1rem;
+  background: #2563eb;
+  border: none;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: background 0.2s;
+  height: 100%;
+}
+
+.search-btn:hover { background: #1d4ed8; }
+
+/* Nav links */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: #f1f5f9; }
+
+.nav-link-signin {
+  padding: 0.4rem 1.1rem;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  color: #2563eb;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link-signin:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .navbar { flex-wrap: wrap; height: auto; padding: 0.75rem 1rem; gap: 0.75rem; }
+  .navbar-search { order: 3; max-width: 100%; width: 100%; }
+}

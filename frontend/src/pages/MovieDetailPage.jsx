@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../api/moviesApi';
-import { fetchPoster, needsPoster } from '../api/tmdbApi';
+import { fetchPoster, fetchTrailerUrl, needsPoster } from '../api/tmdbApi';
 import './MovieDetailPage.css';
 
 const SHOWTIMES = ['2:00 PM', '5:00 PM', '8:00 PM'];
@@ -21,6 +21,7 @@ export default function MovieDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [posterSrc, setPosterSrc] = useState(null);
+  const [trailerSrc, setTrailerSrc] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -32,6 +33,9 @@ export default function MovieDetailPage() {
         } else {
           setPosterSrc(m?.posterUrl || null);
         }
+        fetchTrailerUrl(m.title).then(url => {
+          setTrailerSrc(url || m?.trailerUrl || null);
+        });
       })
       .catch(() => setError('Movie not found.'))
       .finally(() => setLoading(false));
@@ -59,7 +63,7 @@ export default function MovieDetailPage() {
     );
   }
 
-  const trailer = getTrailerEmbed(movie.trailerUrl || movie.trailer);
+  const trailer = getTrailerEmbed(trailerSrc || movie.trailerUrl || movie.trailer);
 
   return (
     <div className="detail-page">

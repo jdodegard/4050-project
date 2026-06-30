@@ -10,38 +10,26 @@ React + Vite frontend for the Cinema E-Booking System (CSCI 4050/6050, Team 15).
 
 ## Getting Started
 
-### Prerequisites
+- Look at ./frontend/README.md for frontend-related config steps
 
-- Node.js 18+
-- The CES backend running on `http://localhost:8080`
+- Have Docker Desktop installed, and have the Docker Engine running
+- Run the following commands to run the application (from the root directory):
 
-### Setup
+    - docker compose up --build
+        - ^^This will build backend/frontend/db
 
-```bash
-npm install
-```
+    - docker compose up --build frontend
+        - ^^This will build frontend
 
-Create a `.env.local` file in this directory:
+    - docker compose up --build backend
+        - ^^This will build backend
 
-```
-VITE_TMDB_API_KEY=your_tmdb_api_key_here
-```
-
-Get a free API key at [themoviedb.org](https://www.themoviedb.org/settings/api).
-
-### Run Dev Server
-
-```bash
-npm run dev
-```
-
-Opens at `http://localhost:3000`.
-
-### Build
-
-```bash
-npm run build
-```
+    - docker compose up --build mysql
+        - ^^This will build db
+        
+- Ctrl + c to end the application, or go to a different terminal in the root directory and run:
+    - docker compose down
+        - Add the -v flag if you want to wipe the db volume and start from scratch
 
 ## Sprint 1 Features
 

@@ -24,21 +24,29 @@ export default function MovieDetailPage() {
   const [trailerSrc, setTrailerSrc] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+    setError(null);
+    setPosterSrc(null);
+    setTrailerSrc(null);
+
     fetchMovieById(id)
-      .then(m => { setMovie(m); return m; })
+      .then(m => { if (!cancelled) setMovie(m); return m; })
       .then(m => {
+        if (cancelled) return;
         if (needsPoster(m?.posterUrl)) {
-          fetchPoster(m.title, 'w500').then(url => { if (url) setPosterSrc(url); });
+          fetchPoster(m.title, 'w500').then(url => { if (!cancelled && url) setPosterSrc(url); });
         } else {
           setPosterSrc(m?.posterUrl || null);
         }
         fetchTrailerUrl(m.title).then(url => {
-          setTrailerSrc(url || m?.trailerUrl || null);
+          if (!cancelled) setTrailerSrc(url || m?.trailerUrl || null);
         });
       })
-      .catch(() => setError('Movie not found.'))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!cancelled) setError('Movie not found.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [id]);
 
   function handleSelectShowtime(time) {

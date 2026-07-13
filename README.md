@@ -58,6 +58,8 @@ Frontend runs on http://localhost:3000, backend on http://localhost:8080.
 Confirmation links, password resets and account-change notices go out over
 SMTP when these env vars are set on the backend:
 
+After running docker compose up, go to localhost:8025 to check mail traffic
+
     MAIL_USERNAME=yourgmail@gmail.com
     MAIL_PASSWORD=your-gmail-app-password
 

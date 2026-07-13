@@ -14,9 +14,37 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cinema?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: cinema
       SPRING_DATASOURCE_PASSWORD: cinema123
+
+      # Override application.properties for Mailpit
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+
+      # Must be non-empty because EmailService checks mailUsername.isBlank().
+      # Must also be a valid email address because EmailService uses it as From.
+      MAIL_USERNAME: noreply@cinema.local
+      MAIL_PASSWORD: test
+
+      # Keep AUTH enabled because Mailpit accepts arbitrary credentials.
+      MAIL_SMTP_AUTH: "true"
+
+      # Mailpit is running without STARTTLS.
+      MAIL_SMTP_STARTTLS: "false"
+
     depends_on:
       mysql:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  mailpit:
+    image: axllent/mailpit:latest
+    command:
+      - "--smtp-auth-accept-any"
+      - "--smtp-auth-allow-insecure"
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    restart: unless-stopped
 
   mysql:
     image: mysql:latest

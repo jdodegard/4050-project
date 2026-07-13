@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../api/moviesApi';
 import { fetchPoster, fetchTrailerUrl, needsPoster } from '../api/tmdbApi';
+import { useAuth } from '../context/AuthContext';
 import { useInView } from '../hooks/useInView';
 import './MovieDetailPage.css';
 
@@ -22,6 +23,7 @@ function nowPlaying(status) {
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, favIds, toggleFavorite } = useAuth();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -105,7 +107,24 @@ export default function MovieDetailPage() {
               )}
             </div>
 
-            <h1 className="detail-title">{movie.title}</h1>
+            <div className="detail-title-row">
+              <h1 className="detail-title">{movie.title}</h1>
+              <button
+                className={`detail-fav ${favIds.has(movie.id) ? 'is-fav' : ''}`}
+                onClick={() => (user ? toggleFavorite(movie.id).catch(() => {}) : navigate('/login'))}
+                title={!user ? 'Sign in to save favorites' : favIds.has(movie.id) ? 'Remove from favorites' : 'Add to favorites'}
+                aria-label={favIds.has(movie.id) ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path
+                    d="M12 21s-6.7-4.35-9.33-8.11C.8 10.2 1.7 6.6 4.86 5.4c1.98-.75 4.03-.05 5.14 1.44L12 8.9l2-2.06c1.11-1.49 3.16-2.19 5.14-1.44 3.16 1.2 4.06 4.8 2.19 7.49C18.7 16.65 12 21 12 21z"
+                    fill={favIds.has(movie.id) ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              </button>
+            </div>
             <hr className="detail-divider" />
 
             {movie.director && (

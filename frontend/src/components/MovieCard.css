@@ -143,3 +143,40 @@
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
+
+/* heart toggle in the poster corner */
+.fav-heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(3, 12, 24, 0.65);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s, transform 0.2s var(--pop), color 0.2s;
+  z-index: 3;
+}
+
+.movie-card:hover .fav-heart,
+.fav-heart.is-fav {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fav-heart:hover {
+  color: #f472b6;
+  transform: scale(1.14);
+}
+
+.fav-heart.is-fav {
+  color: #f472b6;
+  background: rgba(3, 12, 24, 0.8);
+}

@@ -1,63 +1,168 @@
--- This file populates the data into MySQL, including dummy data for 10 movies as per Deliverable 2
+-- Cinema E-Booking System - MySQL schema (Team 15)
+--
+-- Mapped from the Deliverable 3 domain class diagram. The Spring backend
+-- manages the same tables through JPA (ddl-auto=update), so this file is the
+-- reference schema + what the MySQL container runs on first startup.
+-- Movie/admin seed data is inserted by the backend on boot, not here.
 
-DROP TABLE IF EXISTS Movies;
-DROP TABLE IF EXISTS Showtimes;
+-- ---------------------------------------------------------------------
+-- movies + hardcoded showtimes (booking/scheduling tables come later)
+-- ---------------------------------------------------------------------
 
-
-CREATE TABLE Movies (
-    movie_id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255) NOT NULL,
-    rating VARCHAR(10) NOT NULL,       
-    description TEXT NOT NULL,
-    poster_url VARCHAR(500) NOT NULL,  
-    trailer_url VARCHAR(500) NOT NULL, 
-    genre VARCHAR(100) NOT NULL,       
-    showing_status VARCHAR(50) NOT NULL CHECK (showing_status IN ('Currently Running', 'Coming Soon'))
+CREATE TABLE IF NOT EXISTS movies (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title         VARCHAR(255) NOT NULL,
+    genre         VARCHAR(100),
+    rating        VARCHAR(10),                -- MPAA: G, PG, PG-13, R...
+    description   VARCHAR(2000),
+    poster_url    VARCHAR(500),
+    trailer_url   VARCHAR(500),
+    status        VARCHAR(30) NOT NULL,       -- CURRENTLY_RUNNING / COMING_SOON
+    CONSTRAINT chk_movie_status CHECK (status IN ('CURRENTLY_RUNNING', 'COMING_SOON'))
 );
 
-CREATE TABLE Showtimes (
-    showtime_id INT PRIMARY KEY AUTO_INCREMENT,
-    movie_id INT,
-    show_date DATE NOT NULL,           
-    show_time VARCHAR(20) NOT NULL,    -- Hardcoded intervals (e.g., '2:00 PM')
-    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS movie_showtimes (
+    movie_id  BIGINT NOT NULL,
+    showtime  VARCHAR(20),                    -- e.g. '2:00 PM'
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 );
 
-INSERT INTO Movies (movie_id, title, rating, description, poster_url, trailer_url, genre, showing_status) VALUES
--- Currently Running
-(1, 'Toy Story 5', 'G', 'The legendary toy gang faces a modern tech challenge as digital devices disrupt the play ecosystem.', 'https://placehold.co/300x450?text=Toy+Story+5', 'https://www.youtube.com/embed/QftAW9TTmuQ', 'Animation', 'Currently Running'),
-(2, 'Supergirl', 'PG-13', 'Kara Zor-El travels the cosmos to move beyond her past and claim her identity as a powerful hero.', 'https://placehold.co/300x450?text=Supergirl', 'https://www.youtube.com/embed/tzlY8XD1CGg', 'Action', 'Currently Running'),
-(3, 'Disclosure Day', 'PG-13', 'A high-stakes science fiction thriller logging the societal fallout of an sudden planetary discovery.', 'https://placehold.co/300x450?text=Disclosure+Day', 'https://www.youtube.com/embed/icDuEHSxE-w', 'Sci-Fi', 'Currently Running'),
-(4, 'The Death of Robin Hood', 'R', 'An aging outlaw finds himself gravely wounded and facing his history while under the care of a mysterious stranger.', 'https://placehold.co/300x450?text=The+Death+of+Robin+Hood', 'https://www.youtube.com/embed/tlSDDuWxO_0', 'Drama', 'Currently Running'),
-(5, 'Power Ballad', 'R', 'A past-his-prime wedding vocalist is thrown into a chaotic partnership with an unstable boy-band performer.', 'https://placehold.co/300x450?text=Power+Ballad', 'https://www.youtube.com/embed/-faiHUsbP_U', 'Comedy', 'Currently Running'),
+-- ---------------------------------------------------------------------
+-- accounts
+-- ---------------------------------------------------------------------
 
--- Coming Soon
-(6, 'Minions & Monsters', 'PG', 'Gru and his yellow companions embark on a hilarious journey deep into an enchanted world filled with chaotic creatures.', 'https://placehold.co/300x450?text=Minions+%26+Monsters', 'https://www.youtube.com/embed/V-O-uBaHk3c', 'Animation', 'Coming Soon'),
-(7, 'Moana', 'PG', 'The highly-anticipated live-action adaptation tracing the classic ocean voyage with Maui and Moana.', 'https://placehold.co/300x450?text=Moana', 'https://www.youtube.com/embed/EEz5xbzYPKI', 'Adventure', 'Coming Soon'),
-(8, 'The Odyssey', 'R', 'An expansive historical drama following structural conflicts across a demanding ocean navigation campaign.', 'https://placehold.co/300x450?text=The+Odyssey', 'https://www.youtube.com/embed/f_bKjZeJBBI', 'Adventure', 'Coming Soon'),
-(9, 'Spider-Man: Brand New Day', 'PG-13', 'Peter Parker navigates shifting alliances and complex threats to defend his city from collapse.', 'https://placehold.co/300x450?text=Spider-Man%3A+Brand+New+Day', 'https://www.youtube.com/embed/62bIsvRcPv0', 'Action', 'Coming Soon'),
-(10, 'Ice Cream Man', 'R', 'A nostalgic suburban truck harbors deep horrors when local neighborhoods discover what its freezer actually contains.', 'https://placehold.co/300x450?text=Ice+Cream+Man', 'https://www.youtube.com/embed/BjtVXWa3tWI', 'Horror', 'Coming Soon');
+CREATE TABLE IF NOT EXISTS users (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    first_name    VARCHAR(255) NOT NULL,
+    last_name     VARCHAR(255) NOT NULL,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,      -- BCrypt, never plaintext
+    phone         VARCHAR(30),
+    role          VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+    status        VARCHAR(20) NOT NULL DEFAULT 'INACTIVE',
+    promo_opt_in  BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_user_role   CHECK (role IN ('CUSTOMER', 'ADMIN')),
+    CONSTRAINT chk_user_status CHECK (status IN ('INACTIVE', 'ACTIVE', 'SUSPENDED'))
+);
 
+-- one address per user, enforced by the UNIQUE user_id
+CREATE TABLE IF NOT EXISTS addresses (
+    id       BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id  BIGINT NOT NULL UNIQUE,
+    street   VARCHAR(255) NOT NULL,
+    city     VARCHAR(100) NOT NULL,
+    state    VARCHAR(50)  NOT NULL,
+    zip      VARCHAR(20)  NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
-INSERT INTO Showtimes (movie_id, show_date, show_time) VALUES
--- Toy Story 5
-(1, '2026-06-30', '2:00 PM'),
-(1, '2026-06-30', '5:00 PM'),
-(1, '2026-06-30', '8:00 PM'),
+-- card numbers are AES-encrypted by the backend before insert;
+-- the 3-cards-per-user max is enforced in the service layer
+CREATE TABLE IF NOT EXISTS payment_cards (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT NOT NULL,
+    card_type       VARCHAR(20),              -- Visa / Mastercard / Amex / Discover
+    card_number_enc VARCHAR(512) NOT NULL,
+    last4           VARCHAR(4) NOT NULL,
+    exp_month       INT NOT NULL,
+    exp_year        INT NOT NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
--- Supergirl
-(2, '2026-06-30', '2:00 PM'),
-(2, '2026-06-30', '5:00 PM'),
-(2, '2026-06-30', '8:00 PM'),
+-- single-use email tokens (account confirmation, password reset)
+CREATE TABLE IF NOT EXISTS account_tokens (
+    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+    token      VARCHAR(64) NOT NULL UNIQUE,
+    user_id    BIGINT NOT NULL,
+    purpose    VARCHAR(20) NOT NULL,          -- ACTIVATION / PASSWORD_RESET
+    expires_at TIMESTAMP NOT NULL,
+    used       BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
--- Disclosure Day
-(3, '2026-07-01', '2:00 PM'),
-(3, '2026-07-01', '8:00 PM'),
+-- user <-> movie many-to-many for the favorites list
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id  BIGINT NOT NULL,
+    movie_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, movie_id),
+    FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
 
--- The Death of Robin Hood
-(4, '2026-07-01', '5:00 PM'),
-(4, '2026-07-01', '8:00 PM'),
+-- ---------------------------------------------------------------------
+-- scheduling + booking (from the class diagram; used by the booking sprint)
+-- ---------------------------------------------------------------------
 
--- Power Ballad
-(5, '2026-07-02', '2:00 PM'),
-(5, '2026-07-02', '5:00 PM');
+CREATE TABLE IF NOT EXISTS theatres (
+    id       BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name     VARCHAR(255) NOT NULL,
+    location VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS showrooms (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    theatre_id  BIGINT NOT NULL,
+    room_number INT NOT NULL,
+    seat_count  INT NOT NULL,
+    FOREIGN KEY (theatre_id) REFERENCES theatres(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS seats (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    showroom_id BIGINT NOT NULL,
+    row_label   VARCHAR(5) NOT NULL,          -- A, B, C...
+    seat_number INT NOT NULL,
+    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE,
+    UNIQUE (showroom_id, row_label, seat_number)
+);
+
+CREATE TABLE IF NOT EXISTS shows (
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    movie_id     BIGINT NOT NULL,
+    showroom_id  BIGINT NOT NULL,
+    show_date    DATE NOT NULL,
+    show_time    TIME NOT NULL,
+    duration_min INT,
+    FOREIGN KEY (movie_id)    REFERENCES movies(id)    ON DELETE CASCADE,
+    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS promotions (
+    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
+    promo_code       VARCHAR(50) NOT NULL UNIQUE,
+    description      VARCHAR(500),
+    discount_percent DECIMAL(5,2) NOT NULL,
+    start_date       DATE NOT NULL,
+    end_date         DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT NOT NULL,
+    show_id         BIGINT NOT NULL,
+    booking_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    subtotal        DECIMAL(8,2) NOT NULL DEFAULT 0,
+    fees            DECIMAL(8,2) NOT NULL DEFAULT 0,
+    total           DECIMAL(8,2) NOT NULL DEFAULT 0,
+    status          VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    promotion_id    BIGINT,
+    payment_card_id BIGINT,
+    FOREIGN KEY (user_id)         REFERENCES users(id)         ON DELETE CASCADE,
+    FOREIGN KEY (show_id)         REFERENCES shows(id)         ON DELETE CASCADE,
+    FOREIGN KEY (promotion_id)    REFERENCES promotions(id)    ON DELETE SET NULL,
+    FOREIGN KEY (payment_card_id) REFERENCES payment_cards(id) ON DELETE SET NULL,
+    CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED'))
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    booking_id  BIGINT NOT NULL,
+    seat_id     BIGINT NOT NULL,
+    ticket_type VARCHAR(10) NOT NULL,         -- ADULT / SENIOR / CHILD
+    price       DECIMAL(6,2) NOT NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (seat_id)    REFERENCES seats(id),
+    CONSTRAINT chk_ticket_type CHECK (ticket_type IN ('ADULT', 'SENIOR', 'CHILD'))
+);

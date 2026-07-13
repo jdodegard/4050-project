@@ -1,0 +1,197 @@
+/* shared look for the sign in / register / password pages - one glassy card
+   floating over the site backdrop */
+
+.auth-page {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4rem 1.25rem 5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(180deg, rgba(12, 25, 41, 0.92), rgba(8, 18, 32, 0.92));
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  padding: 2.2rem 2.1rem 2.4rem;
+  box-shadow: 0 24px 60px rgba(2, 8, 20, 0.65), 0 0 0 1px rgba(37, 99, 235, 0.08);
+  animation: fadeUp 0.5s var(--smooth) both;
+}
+
+.auth-card.auth-wide { max-width: 620px; }
+
+.auth-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.4rem;
+}
+
+.auth-title {
+  font-family: var(--display);
+  font-size: 1.7rem;
+  margin-bottom: 0.4rem;
+}
+
+.auth-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 1.6rem;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: 0.03em;
+}
+
+/* red star = required, so nobody has to guess */
+.req { color: #f87171; margin-left: 2px; }
+
+.field input,
+.field select {
+  background: var(--bg-deep);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.field-hint { font-size: 0.74rem; color: var(--muted); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.field-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.9rem; }
+
+@media (max-width: 540px) {
+  .field-row, .field-row-3 { grid-template-columns: 1fr; }
+}
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.check-field input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+.auth-btn {
+  margin-top: 0.4rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: transform 0.15s var(--pop), box-shadow 0.2s, opacity 0.2s;
+}
+
+.auth-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px var(--glow);
+}
+
+.auth-btn:disabled { opacity: 0.55; cursor: wait; }
+
+.auth-error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  border-radius: 9px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.auth-success {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+  border-radius: 9px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.auth-links {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-links a { color: var(--accent-hi); font-weight: 600; }
+.auth-links a:hover { color: var(--cyan); }
+
+/* collapsible optional sections on the register form */
+.auth-section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.auth-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 34, 54, 0.5);
+  border: none;
+  color: #cbd5e1;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.auth-section-toggle span:last-child { color: var(--muted); font-weight: 400; font-size: 0.76rem; }
+
+.auth-section-body {
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+/* big centered status for the activate page */
+.auth-status {
+  text-align: center;
+  padding: 1rem 0 0.4rem;
+}
+
+.auth-status .status-icon {
+  font-size: 2.4rem;
+  display: block;
+  margin-bottom: 0.8rem;
+}

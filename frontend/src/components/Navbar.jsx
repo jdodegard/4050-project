@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { searchMoviesByTitle } from '../api/moviesApi';
+import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -8,9 +9,12 @@ export default function Navbar() {
   const [hits, setHits] = useState([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
+  const [menuOpen, setMenuOpen] = useState(false);
   const boxRef = useRef(null);
   const inputRef = useRef(null);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // pull live matches from the db as they type, capped at a handful
   useEffect(() => {
@@ -39,14 +43,21 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // close the dropdown when clicking somewhere else
+  // close the dropdowns when clicking somewhere else
   useEffect(() => {
     function onClick(e) {
       if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     }
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
+
+  async function handleSignOut() {
+    setMenuOpen(false);
+    await logout();
+    navigate('/');
+  }
 
   function goToMovie(id) {
     setOpen(false);
@@ -122,7 +133,31 @@ export default function Navbar() {
 
       <div className="navbar-links">
         <Link to="/" className="nav-link">Home</Link>
-        <Link to="/login" className="nav-link nav-link-signin">Sign In</Link>
+        {user?.role === 'ADMIN' && <Link to="/admin" className="nav-link">Admin</Link>}
+
+        {user ? (
+          <div className="nav-user-wrap" ref={menuRef}>
+            <button
+              className="nav-user-btn"
+              onClick={() => setMenuOpen(v => !v)}
+              title={`${user.firstName} ${user.lastName}`}
+            >
+              <span className="nav-avatar">{user.firstName?.[0]}{user.lastName?.[0]}</span>
+              <span className="nav-user-name">{user.firstName}</span>
+              <span className={`nav-caret ${menuOpen ? 'up' : ''}`}>▾</span>
+            </button>
+
+            {menuOpen && (
+              <div className="nav-user-menu">
+                <Link to="/profile" className="nav-menu-item" onClick={() => setMenuOpen(false)}>My Profile</Link>
+                <Link to="/profile#favorites" className="nav-menu-item" onClick={() => setMenuOpen(false)}>My Favorites</Link>
+                <button className="nav-menu-item nav-menu-signout" onClick={handleSignOut}>Sign Out</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link to="/login" className="nav-link nav-link-signin">Sign In</Link>
+        )}
       </div>
     </nav>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function LoginPage() {
@@ -29,7 +30,7 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <p className="auth-kicker">Welcome back</p>
+        <TicketStub label="Admit One" />
         <h1 className="auth-title">Sign In</h1>
         <p className="auth-sub">Book faster, save favorites and manage your profile.</p>
 

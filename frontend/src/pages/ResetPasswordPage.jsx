@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../api/authApi';
+import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function ResetPasswordPage() {
@@ -33,7 +34,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <p className="auth-kicker">Password reset</p>
+        <TicketStub label="Reissue" />
         <h1 className="auth-title">Choose a New Password</h1>
 
         {message ? (

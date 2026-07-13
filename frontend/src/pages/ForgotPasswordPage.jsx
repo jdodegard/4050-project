@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { forgotPassword } from '../api/authApi';
+import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function ForgotPasswordPage() {
@@ -26,7 +27,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <p className="auth-kicker">Password reset</p>
+        <TicketStub label="Reissue" />
         <h1 className="auth-title">Forgot Password</h1>
         <p className="auth-sub">
           Enter the email on your account and we'll send you a link to pick a new password.

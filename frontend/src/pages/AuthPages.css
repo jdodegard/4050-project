@@ -195,3 +195,99 @@
   display: block;
   margin-bottom: 0.8rem;
 }
+
+/* ---- ticket treatment ------------------------------------------------
+   the auth cards are styled like admission tickets: a stub strip up top,
+   a perforated tear line with punched notches, and stamp-style statuses */
+
+.ticket-stub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -2.2rem -2.1rem 0;
+  padding: 0.8rem 1.5rem;
+  background: rgba(15, 34, 54, 0.45);
+  border-radius: 16px 16px 0 0;
+}
+
+.ticket-brand {
+  font-family: var(--display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.ticket-admit {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  white-space: nowrap;
+}
+
+/* fake barcode, because every good ticket has one */
+.ticket-barcode {
+  width: 58px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.4;
+  background: repeating-linear-gradient(
+    90deg,
+    #cbd5e1 0 1px, transparent 1px 4px,
+    #cbd5e1 4px 6px, transparent 6px 8px,
+    #cbd5e1 8px 9px, transparent 9px 13px
+  );
+}
+
+.ticket-perf {
+  position: relative;
+  margin: 0 -2.1rem 1.6rem;
+  border-top: 2px dashed var(--line-2);
+}
+
+/* the punched half-circles on both ends of the tear line */
+.ticket-perf::before,
+.ticket-perf::after {
+  content: '';
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+}
+
+.ticket-perf::before { left: -11px; }
+.ticket-perf::after { right: -11px; }
+
+/* rubber-stamp style statuses for the confirmation screens */
+.ticket-stamp {
+  display: inline-block;
+  margin-bottom: 1.1rem;
+  padding: 0.4rem 1.15rem;
+  border: 2px solid rgba(52, 211, 153, 0.55);
+  border-radius: 8px;
+  color: #6ee7b7;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  transform: rotate(-5deg);
+}
+
+.ticket-stamp.stamp-void {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fca5a5;
+}
+
+.ticket-stamp.stamp-wait {
+  border-color: rgba(34, 211, 238, 0.45);
+  color: var(--cyan);
+  transform: none;
+}

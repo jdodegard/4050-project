@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { activate } from '../api/authApi';
+import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function ActivatePage() {
@@ -23,16 +24,17 @@ export default function ActivatePage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <TicketStub label="Confirmation" />
         <div className="auth-status">
           {state === 'working' && (
             <>
-              <span className="status-icon">⏳</span>
+              <span className="ticket-stamp stamp-wait">Checking</span>
               <h1 className="auth-title">Confirming your account...</h1>
             </>
           )}
           {state === 'done' && (
             <>
-              <span className="status-icon">🎉</span>
+              <span className="ticket-stamp">Confirmed</span>
               <h1 className="auth-title">You're all set!</h1>
               <p className="auth-sub">{message}</p>
               <div className="auth-links">
@@ -42,7 +44,7 @@ export default function ActivatePage() {
           )}
           {state === 'failed' && (
             <>
-              <span className="status-icon">😕</span>
+              <span className="ticket-stamp stamp-void">Expired</span>
               <h1 className="auth-title">Couldn't confirm</h1>
               <p className="auth-sub">{message}</p>
               <div className="auth-links">

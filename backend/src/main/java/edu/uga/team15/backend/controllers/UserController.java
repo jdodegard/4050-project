@@ -48,6 +48,7 @@ public class UserController {
         out.put("phone", user.getPhone());
         out.put("role", user.getRole().name());
         out.put("promoOptIn", user.isPromoOptIn());
+        out.put("createdAt", user.getCreatedAt());
         out.put("address", profileService.getAddress(user.getId()).orElse(null));
         out.put("cards", profileService.getCards(user.getId()));
         return out;

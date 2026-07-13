@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { register } from '../api/authApi';
+import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function RegisterPage() {
@@ -64,8 +65,9 @@ export default function RegisterPage() {
     return (
       <div className="auth-page">
         <div className="auth-card">
+          <TicketStub label="New Member" />
           <div className="auth-status">
-            <span className="status-icon">📬</span>
+            <span className="ticket-stamp stamp-wait">One more step</span>
             <h1 className="auth-title">Check your email</h1>
             <p className="auth-sub">{done}</p>
             <div className="auth-links">
@@ -80,7 +82,7 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card auth-wide">
-        <p className="auth-kicker">Join CinemaBook</p>
+        <TicketStub label="New Member" />
         <h1 className="auth-title">Create Your Account</h1>
         <p className="auth-sub">
           Fields marked <span className="req">*</span> are required. Address and payment info

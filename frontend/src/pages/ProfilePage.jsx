@@ -144,8 +144,19 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <p className="profile-kicker">Your account</p>
-      <h1 className="profile-title">Hi, {profile.firstName}</h1>
+      <div className="member-card">
+        <span className="member-avatar">{profile.firstName?.[0]}{profile.lastName?.[0]}</span>
+        <div className="member-meta">
+          <p className="profile-kicker">Member card</p>
+          <h1 className="profile-title">{profile.firstName} {profile.lastName}</h1>
+          <p className="member-email">{profile.email}</p>
+        </div>
+        {profile.createdAt && (
+          <span className="member-since">
+            Member since {new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+          </span>
+        )}
+      </div>
       <p className="profile-sub">Manage your info, security, payment methods and favorites.</p>
 
       <div className="profile-sections">

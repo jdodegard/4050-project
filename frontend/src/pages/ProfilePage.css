@@ -211,3 +211,67 @@
 }
 
 .fav-remove:hover { transform: scale(1.12); background: rgba(3, 12, 24, 0.9); }
+
+/* the header styled like a loyalty/member card */
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.14), rgba(34, 211, 238, 0.07) 55%, rgba(12, 25, 41, 0.4));
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  padding: 1.3rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.member-avatar {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  color: #fff;
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-meta { flex: 1; min-width: 0; }
+
+.member-meta .profile-kicker { margin-bottom: 0.15rem; }
+
+.member-meta .profile-title {
+  font-size: 1.45rem;
+  margin-bottom: 0.1rem;
+}
+
+.member-email {
+  color: var(--muted);
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-since {
+  flex-shrink: 0;
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 99px;
+  padding: 0.28rem 0.7rem;
+}
+
+@media (max-width: 540px) {
+  .member-card { flex-wrap: wrap; }
+  .member-since { order: 3; }
+}

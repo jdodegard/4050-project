@@ -20,3 +20,7 @@ export function searchMoviesByTitle(title) {
 export function filterMoviesByGenre(genre) {
   return fetch(`${BASE_URL}/movies/filter?genre=${encodeURIComponent(genre)}`).then(handleResponse);
 }
+
+export function fetchGenres() {
+  return fetch(`${BASE_URL}/movies/genres`).then(handleResponse);
+}

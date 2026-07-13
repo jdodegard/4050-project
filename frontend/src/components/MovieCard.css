@@ -1,33 +1,53 @@
 .movie-card {
-  background: #0c1929;
-  border-radius: 8px;
+  --rx: 0deg;
+  --ry: 0deg;
+  background: var(--panel);
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  border: 1px solid #0f2236;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--line);
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s var(--smooth);
+  opacity: 0;
+  animation: fadeUp 0.55s var(--smooth) forwards;
 }
 
 .movie-card:hover {
-  transform: translateY(-4px);
-  border-color: #2563eb;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 18px 40px rgba(2, 8, 20, 0.6), 0 0 0 1px rgba(37, 99, 235, 0.25), 0 0 30px rgba(37, 99, 235, 0.18);
 }
 
 .movie-card-poster {
   position: relative;
   aspect-ratio: 2 / 3;
-  background: #0a1628;
+  background: var(--panel-2);
   overflow: hidden;
+  transform: translateZ(20px);
 }
 
 .movie-card-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.45s var(--smooth);
 }
 
-.movie-card:hover .movie-card-poster img { transform: scale(1.03); }
+.movie-card:hover .movie-card-poster img { transform: scale(1.07); }
+
+/* light streak that sweeps across the poster on hover */
+.card-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  transform: translateX(-150%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.movie-card:hover .card-shine { animation: sheen 0.9s var(--smooth); }
 
 .poster-placeholder {
   width: 100%;
@@ -35,7 +55,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0a1628;
+  background: radial-gradient(circle at 50% 40%, #0d1f38 0%, transparent 70%), var(--panel-2);
   color: #1e3a5f;
   font-size: 2.5rem;
   letter-spacing: 2px;
@@ -45,51 +65,72 @@
 .movie-card-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(3, 12, 24, 0.65);
+  background: linear-gradient(180deg, transparent 40%, rgba(3, 12, 24, 0.85));
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 1.1rem;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.25s;
 }
 
 .movie-card:hover .movie-card-overlay { opacity: 1; }
 
 .view-details-btn {
-  padding: 0.5rem 1.1rem;
-  background: #2563eb;
+  padding: 0.5rem 1.15rem;
+  background: var(--accent);
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   color: #fff;
   font-weight: 600;
   font-size: 0.85rem;
   letter-spacing: 0.2px;
+  transform: translateY(8px);
+  transition: transform 0.25s var(--pop), background 0.2s;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
 }
+
+.movie-card:hover .view-details-btn { transform: translateY(0); }
+.view-details-btn:hover { background: var(--accent-hi); }
 
 .rating-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(3, 12, 24, 0.85);
+  background: rgba(3, 12, 24, 0.8);
+  backdrop-filter: blur(4px);
   color: #cbd5e1;
   font-size: 0.65rem;
   font-weight: 700;
   padding: 2px 6px;
-  border-radius: 3px;
-  border: 1px solid #1e3a5f;
+  border-radius: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.3);
   letter-spacing: 0.5px;
 }
 
+.status-dot {
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.dot-now { background: #22c55e; animation: glowpulse 2s ease-in-out infinite; --glow: rgba(34, 197, 94, 0.55); }
+.dot-soon { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+
 .movie-card-info {
   padding: 0.7rem 0.85rem 0.85rem;
-  border-top: 1px solid #0f2236;
+  border-top: 1px solid var(--line);
+  transform: translateZ(12px);
 }
 
 .movie-card-title {
   margin: 0 0 0.3rem;
-  font-size: 0.9rem;
+  font-family: var(--display);
+  font-size: 0.92rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -97,7 +138,7 @@
 
 .movie-card-genre {
   font-size: 0.72rem;
-  color: #3b82f6;
+  color: var(--accent-hi);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.8px;

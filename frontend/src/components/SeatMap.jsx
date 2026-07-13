@@ -38,15 +38,18 @@ export default function SeatMap({ totalTickets, onSelectionChange }) {
     });
   }
 
+  const pct = totalTickets > 0 ? Math.min(100, (selected.size / totalTickets) * 100) : 0;
+
   return (
     <div className="seat-map-container">
-      <div className="screen-label">
-        <div className="screen-bar" />
-        <span>SCREEN</span>
+      <div className="screen-stage">
+        <div className="screen-curve" />
+        <span className="screen-text">SCREEN</span>
       </div>
 
-      <div className="seat-grid">
-        {ROWS.map(row => (
+      <div className="seat-floor">
+        <div className="seat-grid">
+          {ROWS.map(row => (
           <div key={row} className="seat-row">
             <span className="row-label">{row}</span>
             <div className="seats">
@@ -72,7 +75,17 @@ export default function SeatMap({ totalTickets, onSelectionChange }) {
             <span className="row-label">{row}</span>
           </div>
         ))}
+        </div>
       </div>
+
+      {totalTickets > 0 && (
+        <div className="seat-progress">
+          <div className="seat-progress-track">
+            <div className="seat-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <span>{selected.size} / {totalTickets} seats</span>
+        </div>
+      )}
 
       <div className="seat-legend">
         <div className="legend-item">

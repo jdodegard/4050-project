@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../api/moviesApi';
 import { fetchPoster, fetchTrailerUrl, needsPoster } from '../api/tmdbApi';
+import { useInView } from '../hooks/useInView';
 import './MovieDetailPage.css';
 
 const SHOWTIMES = ['2:00 PM', '5:00 PM', '8:00 PM'];
@@ -14,6 +15,10 @@ function getTrailerEmbed(url) {
   return { type: 'video', src: url };
 }
 
+function nowPlaying(status) {
+  return /NOW|RUNNING|CURRENT/.test((status || '').toUpperCase());
+}
+
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,6 +27,7 @@ export default function MovieDetailPage() {
   const [error, setError] = useState(null);
   const [posterSrc, setPosterSrc] = useState(null);
   const [trailerSrc, setTrailerSrc] = useState(null);
+  const [trailerRef, trailerSeen] = useInView();
 
   useEffect(() => {
     setLoading(true);
@@ -33,8 +39,10 @@ export default function MovieDetailPage() {
         } else {
           setPosterSrc(m?.posterUrl || null);
         }
+        // pull a real trailer from TMDB when a key is set, otherwise the
+        // seeded trailerUrl stays as the fallback
         fetchTrailerUrl(m.title).then(url => {
-          setTrailerSrc(url || m?.trailerUrl || null);
+          if (url) setTrailerSrc(url);
         });
       })
       .catch(() => setError('Movie not found.'))
@@ -64,10 +72,15 @@ export default function MovieDetailPage() {
   }
 
   const trailer = getTrailerEmbed(trailerSrc || movie.trailerUrl || movie.trailer);
+  const playing = nowPlaying(movie.status);
 
   return (
     <div className="detail-page">
-      <div className="detail-backdrop" />
+      {/* blurred poster bleeds behind the header for a cinema feel */}
+      <div className="detail-backdrop">
+        {posterSrc && <img src={posterSrc} alt="" aria-hidden="true" />}
+        <div className="detail-backdrop-fade" />
+      </div>
 
       <div className="detail-content">
         <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
@@ -86,8 +99,8 @@ export default function MovieDetailPage() {
               {movie.rating && <span className="badge badge-rating">{movie.rating}</span>}
               {movie.genre && <span className="badge badge-genre">{movie.genre}</span>}
               {movie.status && (
-                <span className={`badge ${(movie.status.toUpperCase().includes('NOW') || movie.status.toUpperCase().includes('RUNNING') || movie.status.toUpperCase().includes('CURRENT')) ? 'badge-now' : 'badge-soon'}`}>
-                  {(movie.status.toUpperCase().includes('NOW') || movie.status.toUpperCase().includes('RUNNING') || movie.status.toUpperCase().includes('CURRENT')) ? 'Now Playing' : 'Coming Soon'}
+                <span className={`badge ${playing ? 'badge-now' : 'badge-soon'}`}>
+                  {playing ? 'Now Playing' : 'Coming Soon'}
                 </span>
               )}
             </div>
@@ -116,16 +129,18 @@ export default function MovieDetailPage() {
                     className="showtime-btn"
                     onClick={() => handleSelectShowtime(time)}
                   >
-                    {time}
+                    <span className="st-time">{time}</span>
+                    <span className="st-go">Book →</span>
                   </button>
                 ))}
               </div>
+              <p className="showtime-hint">pick a time to start your booking</p>
             </div>
           </div>
         </div>
 
         {trailer && (
-          <div className="trailer-section">
+          <div className={`trailer-section reveal ${trailerSeen ? 'in' : ''}`} ref={trailerRef}>
             <h2 className="section-heading">
               <span className="title-accent" />
               Trailer

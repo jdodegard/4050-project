@@ -2,16 +2,20 @@ package edu.uga.team15.backend.config;
 
 import edu.uga.team15.backend.models.Movie;
 import edu.uga.team15.backend.models.MovieStatus;
+import edu.uga.team15.backend.models.PaymentCard;
 import edu.uga.team15.backend.models.Role;
 import edu.uga.team15.backend.models.User;
 import edu.uga.team15.backend.models.UserStatus;
 import edu.uga.team15.backend.repositories.MovieRepository;
+import edu.uga.team15.backend.repositories.PaymentCardRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
+import edu.uga.team15.backend.services.CardCipher;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Seeds the database on startup if it is empty: the movie catalog plus one
@@ -23,18 +27,26 @@ public class DataSeeder implements CommandLineRunner {
 
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
+    private final PaymentCardRepository paymentCardRepository;
+    private final CardCipher cardCipher;
 
     private static final List<String> SHOWTIMES = List.of("2:00 PM", "5:00 PM", "8:00 PM");
 
-    public DataSeeder(MovieRepository movieRepository, UserRepository userRepository) {
+    public DataSeeder(MovieRepository movieRepository, 
+                      UserRepository userRepository,
+                      PaymentCardRepository paymentCardRepository,
+                      CardCipher cardCipher) {
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
+        this.paymentCardRepository = paymentCardRepository;
+        this.cardCipher = cardCipher;
     }
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws Exception {
         seedAdmin();
         seedMovies();
+        seedDemoUsers();
     }
 
     private void seedAdmin() {
@@ -129,5 +141,38 @@ public class DataSeeder implements CommandLineRunner {
         ));
 
         System.out.println("Seeded " + movieRepository.count() + " movies.");
+    }
+
+    private void seedDemoUsers() throws Exception {
+        // Prevent duplicate seeding if the script runs again
+        if (paymentCardRepository.count() > 0) {
+            return;
+        }
+
+        //  verified user with 3 pay cards for TC7
+        User cardUser = new User("Joe", "Customer", "joe@cinemabook.com", 
+                new BCryptPasswordEncoder().encode("JoePass!123"));
+        cardUser.setRole(Role.CUSTOMER);
+        cardUser.setStatus(UserStatus.ACTIVE);
+        User savedCardUser = userRepository.save(cardUser);
+
+        PaymentCard card1 = new PaymentCard(savedCardUser, "Visa", cardCipher.encrypt("4111111111113456"), "3456", 3, 2030);
+        PaymentCard card2 = new PaymentCard(savedCardUser, "Mastercard", cardCipher.encrypt("5105105105102670"), "2670", 4, 2028);
+        PaymentCard card3 = new PaymentCard(savedCardUser, "Amex", cardCipher.encrypt("340000000009374"), "9374", 9, 2026);
+        paymentCardRepository.saveAll(List.of(card1, card2, card3));
+
+        // verified user with favorites for test8 & test9
+        User favUser = new User("Jane", "Doe", "jane@cinemabook.com", 
+                new BCryptPasswordEncoder().encode("JanePass!123"));
+        favUser.setRole(Role.CUSTOMER);
+        favUser.setStatus(UserStatus.ACTIVE);
+        
+        List<Movie> allMovies = movieRepository.findAll();
+        if (!allMovies.isEmpty()) {
+            favUser.setFavorites(Set.of(allMovies.get(0))); // heart on 'Inception'
+        }
+        userRepository.save(favUser);
+
+        System.out.println("Seeded demo users: joe@cinemabook.com and jane@cinemabook.com");
     }
 }

@@ -84,7 +84,7 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid email or password.");
         }
         if (user.getStatus() == UserStatus.INACTIVE) {
-            throw new IllegalArgumentException("Please confirm your email before signing in. Check your inbox for the confirmation link.");
+            throw new IllegalArgumentException("Account is not verified. Please check your email to verify your account.");
         }
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new IllegalArgumentException("This account has been suspended. Contact support for help.");

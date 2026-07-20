@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../api/moviesApi';
+import { fetchShowsForMovie } from '../api/showsApi';
 import { fetchPoster, fetchTrailerUrl, needsPoster } from '../api/tmdbApi';
 import { useAuth } from '../context/AuthContext';
 import { useInView } from '../hooks/useInView';
+import { showDate, showTime } from '../utils/showFormat';
 import './MovieDetailPage.css';
-
-const SHOWTIMES = ['2:00 PM', '5:00 PM', '8:00 PM'];
 
 function getTrailerEmbed(url) {
   if (!url) return null;
@@ -29,6 +29,7 @@ export default function MovieDetailPage() {
   const [error, setError] = useState(null);
   const [posterSrc, setPosterSrc] = useState(null);
   const [trailerSrc, setTrailerSrc] = useState(null);
+  const [shows, setShows] = useState([]);
   const [trailerRef, trailerSeen] = useInView();
 
   useEffect(() => {
@@ -37,6 +38,11 @@ export default function MovieDetailPage() {
     setError(null);
     setPosterSrc(null);
     setTrailerSrc(null);
+    setShows([]);
+
+    fetchShowsForMovie(id)
+      .then(list => { if (!cancelled) setShows(list); })
+      .catch(() => {});
 
     fetchMovieById(id)
       .then(m => { if (!cancelled) setMovie(m); return m; })
@@ -59,9 +65,16 @@ export default function MovieDetailPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  function handleSelectShowtime(time) {
-    navigate('/booking', { state: { movie: { ...movie, posterUrl: posterSrc || movie.posterUrl }, showtime: time } });
+  function handleSelectShowtime(show) {
+    navigate('/booking', { state: { movie: { ...movie, posterUrl: posterSrc || movie.posterUrl }, show } });
   }
+
+  // group the shows by day so the buttons read like a real cinema listing
+  const showsByDate = shows.reduce((acc, s) => {
+    const day = showDate(s.startsAt);
+    (acc[day] = acc[day] || []).push(s);
+    return acc;
+  }, {});
 
   if (loading) {
     return (
@@ -149,19 +162,33 @@ export default function MovieDetailPage() {
 
             <div className="showtimes-section">
               <h3>Available Showtimes</h3>
-              <div className="showtimes-grid">
-                {SHOWTIMES.map(time => (
-                  <button
-                    key={time}
-                    className="showtime-btn"
-                    onClick={() => handleSelectShowtime(time)}
-                  >
-                    <span className="st-time">{time}</span>
-                    <span className="st-go">Book →</span>
-                  </button>
-                ))}
-              </div>
-              <p className="showtime-hint">pick a time to start your booking</p>
+              {shows.length === 0 ? (
+                <p className="showtime-hint">
+                  {playing ? 'No showtimes scheduled yet - check back soon.' : 'Showtimes open once the movie is released.'}
+                </p>
+              ) : (
+                <>
+                  {Object.entries(showsByDate).map(([day, dayShows]) => (
+                    <div key={day} className="showtime-day">
+                      <p className="showtime-day-label">{day}</p>
+                      <div className="showtimes-grid">
+                        {dayShows.map(s => (
+                          <button
+                            key={s.id}
+                            className="showtime-btn"
+                            onClick={() => handleSelectShowtime(s)}
+                          >
+                            <span className="st-time">{showTime(s.startsAt)}</span>
+                            <span className="st-room">{s.showroom.name}</span>
+                            <span className="st-go">Book →</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <p className="showtime-hint">pick a time to start your booking</p>
+                </>
+              )}
             </div>
           </div>
         </div>

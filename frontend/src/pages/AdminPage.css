@@ -79,6 +79,104 @@
   padding: 0.18rem 0.55rem;
 }
 
+.admin-tile-go {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent-hi);
+}
+
+a.admin-tile { color: inherit; text-decoration: none; }
+
+.admin-tile-disabled { opacity: 0.55; }
+.admin-tile-disabled:hover {
+  border-color: var(--line);
+  transform: none;
+  box-shadow: none;
+}
+
+/* the tool pages: form on the left, live table on the right */
+.admin-split {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .admin-split { grid-template-columns: 1fr; }
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem 1.4rem;
+}
+
+.admin-form textarea {
+  background: var(--bg-deep);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.admin-success {
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.84rem;
+  color: var(--cyan);
+}
+
+.admin-success a { color: var(--text); font-weight: 600; }
+
+.admin-list-title {
+  font-family: var(--display);
+  font-size: 1.02rem;
+  margin-bottom: 0.8rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.admin-table td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  color: #cbd5e1;
+}
+
+.admin-table tr:hover td { background: rgba(37, 99, 235, 0.05); }
+
 .admin-back {
   display: inline-block;
   margin-top: 2.4rem;

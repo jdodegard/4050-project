@@ -87,3 +87,25 @@ still work, just copy them out of the log.
 - Favorite movies via the heart on any movie card or the details page
 - Passwords hashed with BCrypt; email notification on every account change
 - Admin portal home page (prototype menu: movies, showtimes, promotions, users)
+
+## Sprint 3 Features
+
+- Real showtime scheduling: shows live in their own table (movie + showroom +
+  start time), movie pages list them grouped by day straight from the DB
+- 3 seeded showrooms with different layouts (8x12, 6x10, 5x8), plus 3 days of
+  seeded showtimes across all rooms and a couple of pre-booked seats
+- Admin > Manage Movies: add-movie form with validation, live catalog table
+- Admin > Manage Showtimes: pick movie/room/date/time, full schedule table,
+  double-booking a room at the same time gets rejected (service check + DB
+  unique constraint)
+- Admin > Manage Promotions (bonus): create promo codes, automatically emails
+  every user who opted in to promo emails
+- Booking page pulls the real seat map for the show's room and greys out
+  seats other people already booked; selection must match the ticket count
+- Checkout flow: order summary (per-ticket prices, total before tax), confirm
+  your account email or enter a different one, then the payment page (mockup -
+  processing comes with the final demo)
+- Checkout requires login: signed-out users get sent to the login page and
+  come right back with their seats still held (draft parked in sessionStorage)
+- Demo users: `joe@cinemabook.com` / `JoePass!123` (3 saved cards) and
+  `jane@cinemabook.com` / `JanePass!123` (favorites + promo opt-in)

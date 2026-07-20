@@ -1,12 +1,11 @@
 package edu.uga.team15.backend.models;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A movie in the CES catalog. Maps to the "movies" table.
- * Showtimes are hardcoded/seeded for now (real scheduling comes later).
+ * Showtimes live in their own table now (see Show) - a movie only appears
+ * as bookable once the admin schedules it.
  */
 @Entity
 @Table(name = "movies")
@@ -34,17 +33,11 @@ public class Movie {
     @Column(nullable = false)
     private MovieStatus status;  // CURRENTLY_RUNNING or COMING_SOON
 
-    /** Hardcoded showtimes for this sprint, e.g. "2:00 PM", "5:00 PM", "8:00 PM". */
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "movie_showtimes", joinColumns = @JoinColumn(name = "movie_id"))
-    @Column(name = "showtime")
-    private List<String> showtimes = new ArrayList<>();
-
     public Movie() {
     }
 
     public Movie(String title, String genre, String rating, String description,
-                 String posterUrl, String trailerUrl, MovieStatus status, List<String> showtimes) {
+                 String posterUrl, String trailerUrl, MovieStatus status) {
         this.title = title;
         this.genre = genre;
         this.rating = rating;
@@ -52,7 +45,6 @@ public class Movie {
         this.posterUrl = posterUrl;
         this.trailerUrl = trailerUrl;
         this.status = status;
-        this.showtimes = showtimes;
     }
 
     public Long getId() { return id; }
@@ -78,7 +70,4 @@ public class Movie {
 
     public MovieStatus getStatus() { return status; }
     public void setStatus(MovieStatus status) { this.status = status; }
-
-    public List<String> getShowtimes() { return showtimes; }
-    public void setShowtimes(List<String> showtimes) { this.showtimes = showtimes; }
 }

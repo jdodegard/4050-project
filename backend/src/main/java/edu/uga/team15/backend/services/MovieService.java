@@ -50,4 +50,32 @@ public class MovieService {
     public List<String> getGenres() {
         return movieRepository.findDistinctGenres();
     }
+
+    /** Admin add-movie. Same fields as the seed data, validated. */
+    public Movie addMovie(String title, String genre, String rating, String description,
+                          String posterUrl, String trailerUrl, String status) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Title is required.");
+        }
+        if (genre == null || genre.isBlank()) {
+            throw new IllegalArgumentException("Genre is required.");
+        }
+        if (rating == null || rating.isBlank()) {
+            throw new IllegalArgumentException("Pick an MPAA rating.");
+        }
+
+        MovieStatus movieStatus;
+        try {
+            movieStatus = MovieStatus.valueOf(status);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Pick a status: currently running or coming soon.");
+        }
+
+        return movieRepository.save(new Movie(title.trim(), genre.trim(), rating.trim(),
+                blankToNull(description), blankToNull(posterUrl), blankToNull(trailerUrl), movieStatus));
+    }
+
+    private String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
+    }
 }

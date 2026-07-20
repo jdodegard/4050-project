@@ -10,7 +10,12 @@ import ActivatePage from './pages/ActivatePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
+import CheckoutPage from './pages/CheckoutPage';
+import PaymentPage from './pages/PaymentPage';
 import AdminPage from './pages/AdminPage';
+import AdminMoviesPage from './pages/AdminMoviesPage';
+import AdminShowtimesPage from './pages/AdminShowtimesPage';
+import AdminPromotionsPage from './pages/AdminPromotionsPage';
 
 export default function App() {
   return (
@@ -21,6 +26,8 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/movie/:id" element={<MovieDetailPage />} />
           <Route path="/booking" element={<BookingPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment" element={<PaymentPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/activate" element={<ActivatePage />} />
@@ -28,6 +35,9 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/movies" element={<AdminMoviesPage />} />
+          <Route path="/admin/showtimes" element={<AdminShowtimesPage />} />
+          <Route path="/admin/promotions" element={<AdminPromotionsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

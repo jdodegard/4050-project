@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SeatMap from '../components/SeatMap';
+import { fetchSeatMap } from '../api/showsApi';
+import { showDate, showTime } from '../utils/showFormat';
+import { saveDraft, loadDraft } from '../utils/bookingDraft';
 import './BookingPage.css';
 
-const TICKET_TYPES = [
+export const TICKET_TYPES = [
   { key: 'child',  label: 'Child',  price: 8.99,  note: 'Ages 12 & under' },
   { key: 'adult',  label: 'Adult',  price: 12.99, note: 'Ages 13–64' },
   { key: 'senior', label: 'Senior', price: 9.99,  note: 'Ages 65+' },
@@ -13,11 +16,22 @@ export default function BookingPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  const movie    = state?.movie    || null;
-  const showtime = state?.showtime || null;
+  // fresh from the movie page, or restored after a login round-trip
+  const draft = state?.show ? null : loadDraft();
+  const movie = state?.movie || draft?.movie || null;
+  const show  = state?.show  || draft?.show  || null;
 
-  const [quantities, setQuantities] = useState({ child: 0, adult: 0, senior: 0 });
-  const [selectedSeats, setSelectedSeats] = useState(new Set());
+  const [quantities, setQuantities] = useState(draft?.quantities || { child: 0, adult: 0, senior: 0 });
+  const [selectedSeats, setSelectedSeats] = useState(new Set(draft?.seats || []));
+  const [seatInfo, setSeatInfo] = useState(null);
+  const [seatError, setSeatError] = useState(false);
+
+  useEffect(() => {
+    if (!show) return;
+    fetchSeatMap(show.id)
+      .then(setSeatInfo)
+      .catch(() => setSeatError(true));
+  }, [show?.id]);
 
   const totalTickets = quantities.child + quantities.adult + quantities.senior;
   const subtotal = TICKET_TYPES.reduce((sum, t) => sum + t.price * quantities[t.key], 0);
@@ -26,13 +40,40 @@ export default function BookingPage() {
   const total = subtotal + bookingFee + tax;
 
   function changeQty(key, delta) {
-    setQuantities(prev => ({
-      ...prev,
-      [key]: Math.max(0, prev[key] + delta),
-    }));
+    const next = { ...quantities, [key]: Math.max(0, quantities[key] + delta) };
+    setQuantities(next);
+
+    // dropping tickets can leave too many seats picked - trim from the end
+    const allowed = next.child + next.adult + next.senior;
+    if (selectedSeats.size > allowed) {
+      setSelectedSeats(new Set(Array.from(selectedSeats).slice(0, allowed)));
+    }
   }
 
-  if (!movie || !showtime) {
+  function toggleSeat(seatId) {
+    setSelectedSeats(prev => {
+      const next = new Set(prev);
+      if (next.has(seatId)) {
+        next.delete(seatId);
+      } else {
+        if (next.size >= totalTickets) return prev;
+        next.add(seatId);
+      }
+      return next;
+    });
+  }
+
+  function proceedToCheckout() {
+    saveDraft({
+      movie: { id: movie.id, title: movie.title, posterUrl: movie.posterUrl, genre: movie.genre, rating: movie.rating },
+      show,
+      quantities,
+      seats: Array.from(selectedSeats).sort(),
+    });
+    navigate('/checkout');
+  }
+
+  if (!movie || !show) {
     return (
       <div className="booking-status">
         <p>No booking information found.</p>
@@ -41,6 +82,8 @@ export default function BookingPage() {
     );
   }
 
+  const showLabel = `${showDate(show.startsAt)} · ${showTime(show.startsAt)}`;
+
   return (
     <div className="booking-page">
       <div className="booking-header">
@@ -48,7 +91,8 @@ export default function BookingPage() {
         <div className="booking-header-info">
           <h1>{movie.title}</h1>
           <p className="booking-showtime">
-            <span className="showtime-chip">{showtime}</span>
+            <span className="showtime-chip">{showLabel}</span>
+            <span className="room-chip">{show.showroom.name}</span>
             {movie.genre && <span className="genre-chip">{movie.genre}</span>}
             {movie.rating && <span className="rating-chip">{movie.rating}</span>}
           </p>
@@ -99,10 +143,18 @@ export default function BookingPage() {
             <h2 className="booking-section-title">Choose Your Seats</h2>
             {totalTickets === 0 ? (
               <p className="seat-hint">Add tickets above to enable seat selection.</p>
+            ) : seatError ? (
+              <p className="seat-hint">Couldn't load the seat map. Refresh and try again.</p>
+            ) : !seatInfo ? (
+              <p className="seat-hint">Loading the seat map...</p>
             ) : (
               <SeatMap
+                seatRows={seatInfo.seatRows}
+                seatsPerRow={seatInfo.seatsPerRow}
+                taken={seatInfo.taken}
+                selected={selectedSeats}
+                onToggle={toggleSeat}
                 totalTickets={totalTickets}
-                onSelectionChange={setSelectedSeats}
               />
             )}
           </section>
@@ -119,7 +171,8 @@ export default function BookingPage() {
               )}
               <div>
                 <p className="summary-title">{movie.title}</p>
-                <p className="summary-time">{showtime}</p>
+                <p className="summary-time">{showLabel}</p>
+                <p className="summary-time">{show.showroom.name}</p>
               </div>
             </div>
 
@@ -164,7 +217,7 @@ export default function BookingPage() {
             <button
               className="checkout-btn"
               disabled={totalTickets === 0 || selectedSeats.size !== totalTickets}
-              onClick={() => alert('Checkout will be available in the next sprint!')}
+              onClick={proceedToCheckout}
             >
               {totalTickets === 0
                 ? 'Select Tickets to Continue'

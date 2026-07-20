@@ -6,7 +6,7 @@
 -- Movie/admin seed data is inserted by the backend on boot, not here.
 
 -- ---------------------------------------------------------------------
--- movies + hardcoded showtimes (booking/scheduling tables come later)
+-- movies
 -- ---------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS movies (
@@ -19,12 +19,6 @@ CREATE TABLE IF NOT EXISTS movies (
     trailer_url   VARCHAR(500),
     status        VARCHAR(30) NOT NULL,       -- CURRENTLY_RUNNING / COMING_SOON
     CONSTRAINT chk_movie_status CHECK (status IN ('CURRENTLY_RUNNING', 'COMING_SOON'))
-);
-
-CREATE TABLE IF NOT EXISTS movie_showtimes (
-    movie_id  BIGINT NOT NULL,
-    showtime  VARCHAR(20),                    -- e.g. '2:00 PM'
-    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 );
 
 -- ---------------------------------------------------------------------
@@ -92,77 +86,55 @@ CREATE TABLE IF NOT EXISTS favorites (
 );
 
 -- ---------------------------------------------------------------------
--- scheduling + booking (from the class diagram; used by the booking sprint)
+-- scheduling + booking
 -- ---------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS theatres (
-    id       BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name     VARCHAR(255) NOT NULL,
-    location VARCHAR(255)
-);
-
+-- seat labels (A1..H12) are derived from rows x seats per row, so there is
+-- no separate seats table; tickets store the label directly
 CREATE TABLE IF NOT EXISTS showrooms (
-    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-    theatre_id  BIGINT NOT NULL,
-    room_number INT NOT NULL,
-    seat_count  INT NOT NULL,
-    FOREIGN KEY (theatre_id) REFERENCES theatres(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS seats (
-    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-    showroom_id BIGINT NOT NULL,
-    row_label   VARCHAR(5) NOT NULL,          -- A, B, C...
-    seat_number INT NOT NULL,
-    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE,
-    UNIQUE (showroom_id, row_label, seat_number)
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name          VARCHAR(255) NOT NULL,
+    seat_rows     INT NOT NULL,
+    seats_per_row INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS shows (
-    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
-    movie_id     BIGINT NOT NULL,
-    showroom_id  BIGINT NOT NULL,
-    show_date    DATE NOT NULL,
-    show_time    TIME NOT NULL,
-    duration_min INT,
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    movie_id    BIGINT NOT NULL,
+    showroom_id BIGINT NOT NULL,
+    starts_at   DATETIME NOT NULL,
     FOREIGN KEY (movie_id)    REFERENCES movies(id)    ON DELETE CASCADE,
-    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE
+    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE,
+    -- the scheduling-conflict rule: one show per room per start time
+    UNIQUE (showroom_id, starts_at)
 );
 
 CREATE TABLE IF NOT EXISTS promotions (
     id               BIGINT PRIMARY KEY AUTO_INCREMENT,
-    promo_code       VARCHAR(50) NOT NULL UNIQUE,
-    description      VARCHAR(500),
-    discount_percent DECIMAL(5,2) NOT NULL,
+    code             VARCHAR(50) NOT NULL UNIQUE,
+    description      VARCHAR(255),
+    discount_percent INT NOT NULL,
     start_date       DATE NOT NULL,
     end_date         DATE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id         BIGINT NOT NULL,
-    show_id         BIGINT NOT NULL,
-    booking_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    subtotal        DECIMAL(8,2) NOT NULL DEFAULT 0,
-    fees            DECIMAL(8,2) NOT NULL DEFAULT 0,
-    total           DECIMAL(8,2) NOT NULL DEFAULT 0,
-    status          VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    promotion_id    BIGINT,
-    payment_card_id BIGINT,
-    FOREIGN KEY (user_id)         REFERENCES users(id)         ON DELETE CASCADE,
-    FOREIGN KEY (show_id)         REFERENCES shows(id)         ON DELETE CASCADE,
-    FOREIGN KEY (promotion_id)    REFERENCES promotions(id)    ON DELETE SET NULL,
-    FOREIGN KEY (payment_card_id) REFERENCES payment_cards(id) ON DELETE SET NULL,
+    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id    BIGINT NOT NULL,
+    show_id    BIGINT NOT NULL,
+    status     VARCHAR(20) NOT NULL DEFAULT 'CONFIRMED',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE,
     CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED'))
 );
 
 CREATE TABLE IF NOT EXISTS tickets (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     booking_id  BIGINT NOT NULL,
-    seat_id     BIGINT NOT NULL,
+    seat_label  VARCHAR(5) NOT NULL,          -- e.g. 'C7'
     ticket_type VARCHAR(10) NOT NULL,         -- ADULT / SENIOR / CHILD
     price       DECIMAL(6,2) NOT NULL,
     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
-    FOREIGN KEY (seat_id)    REFERENCES seats(id),
     CONSTRAINT chk_ticket_type CHECK (ticket_type IN ('ADULT', 'SENIOR', 'CHILD'))
 );

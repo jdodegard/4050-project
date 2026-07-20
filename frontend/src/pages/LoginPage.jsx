@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TicketStub from '../components/TicketStub';
 import './AuthPages.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,8 +19,9 @@ export default function LoginPage() {
     setBusy(true);
     try {
       const user = await login(email, password);
-      // admins land on their portal, customers go back to browsing
-      navigate(user.role === 'ADMIN' ? '/admin' : '/');
+      // mid-checkout logins go back to checkout; otherwise admins land on
+      // their portal and customers go back to browsing
+      navigate(state?.next || (user.role === 'ADMIN' ? '/admin' : '/'));
     } catch (err) {
       setError(err.message);
     } finally {

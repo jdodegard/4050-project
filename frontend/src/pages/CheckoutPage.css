@@ -1,0 +1,86 @@
+/* checkout + payment share this. leans on the card/summary styles
+   from BookingPage.css and the .field styles from AuthPages.css */
+@import './BookingPage.css';
+@import './AuthPages.css';
+
+.checkout-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+.checkout-kicker {
+  margin-top: 1.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.checkout-title {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  margin: 0.3rem 0 1.6rem;
+}
+
+.checkout-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.checkout-card { width: 100%; }
+
+.checkout-seats { margin: 0.9rem 0 1rem; }
+
+.per-ticket { color: var(--muted); font-size: 0.78rem; }
+
+.checkout-pretax { font-weight: 700; }
+
+.checkout-email-sub {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+}
+
+.email-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.email-option:hover { border-color: var(--accent); }
+
+.email-option.is-active {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.email-option input { accent-color: var(--accent); margin-top: 2px; }
+
+.email-option-value {
+  display: block;
+  color: var(--cyan);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.checkout-email-field { margin-bottom: 0.9rem; }
+
+.payment-card .field { margin-bottom: 0.9rem; }
+
+.payment-note {
+  margin-top: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.payment-note strong { color: var(--text); }

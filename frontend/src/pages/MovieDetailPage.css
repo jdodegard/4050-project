@@ -142,6 +142,16 @@
 
 .showtimes-grid { display: flex; gap: 0.7rem; flex-wrap: wrap; }
 
+.showtime-day { margin-bottom: 0.9rem; }
+
+.showtime-day-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.45rem;
+}
+
 .showtime-btn {
   position: relative;
   overflow: hidden;
@@ -158,6 +168,7 @@
 }
 
 .showtime-btn .st-time { font-size: 0.95rem; font-weight: 700; }
+.showtime-btn .st-room { font-size: 0.66rem; color: var(--muted); }
 .showtime-btn .st-go {
   font-size: 0.66rem;
   color: var(--accent-hi);

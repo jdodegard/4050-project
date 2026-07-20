@@ -1,5 +1,6 @@
 package edu.uga.team15.backend.services;
 
+import edu.uga.team15.backend.models.Promotion;
 import edu.uga.team15.backend.models.User;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,18 @@ public class EmailService {
                 + "We received a request to reset your password. Click the link below to choose a new one:\n\n"
                 + link + "\n\n"
                 + "The link expires in 1 hour. If you didn't request this, you can safely ignore this email.");
+    }
+
+    /** Promo blast - only sent to users who opted in on their profile. */
+    public void sendPromotionEmail(User user, Promotion promo) {
+        send(user.getEmail(), "CES deal: " + promo.getDiscountPercent() + "% off with code " + promo.getCode(),
+                "Hi " + user.getFirstName() + ",\n\n"
+                + (promo.getDescription() == null || promo.getDescription().isBlank()
+                        ? "We've got a new deal for you." : promo.getDescription()) + "\n\n"
+                + "Use code " + promo.getCode() + " for " + promo.getDiscountPercent() + "% off your next booking.\n"
+                + "Valid " + promo.getStartDate() + " through " + promo.getEndDate() + ".\n\n"
+                + "You're getting this because you opted in to promotional emails. "
+                + "You can turn these off any time from your profile page.");
     }
 
     /** Sent whenever profile info, password, address or cards change. */

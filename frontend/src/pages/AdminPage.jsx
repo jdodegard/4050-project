@@ -1,14 +1,12 @@
-import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { useAdminGuard } from '../hooks/useAdminGuard';
 import './AdminPage.css';
 
-// prototype only for this sprint - shows the admin menu so the role-based
-// redirect has somewhere real to land. The tools get built next sprint.
 const SECTIONS = [
   {
     title: 'Manage Movies',
-    blurb: 'Add, edit and remove movies in the catalog.',
+    blurb: 'Add movies to the catalog.',
+    to: '/admin/movies',
     icon: (
       // clapperboard
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -19,8 +17,9 @@ const SECTIONS = [
     ),
   },
   {
-    title: 'Showtimes',
+    title: 'Manage Showtimes',
     blurb: 'Schedule shows and assign showrooms.',
+    to: '/admin/showtimes',
     icon: (
       // clock
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -30,8 +29,9 @@ const SECTIONS = [
     ),
   },
   {
-    title: 'Promotions',
+    title: 'Manage Promotions',
     blurb: 'Create promo codes and email subscribers.',
+    to: '/admin/promotions',
     icon: (
       // price tag
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -41,8 +41,9 @@ const SECTIONS = [
     ),
   },
   {
-    title: 'Users',
+    title: 'Manage Users',
     blurb: 'Manage customer accounts and suspensions.',
+    to: null,   // not part of this sprint
     icon: (
       // two people
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -55,30 +56,32 @@ const SECTIONS = [
 ];
 
 export default function AdminPage() {
-  const { user, checking } = useAuth();
-  const navigate = useNavigate();
-
-  // customers don't belong here
-  useEffect(() => {
-    if (!checking && (!user || user.role !== 'ADMIN')) navigate('/');
-  }, [user, checking, navigate]);
-
-  if (checking || !user || user.role !== 'ADMIN') return null;
+  const { user, ready } = useAdminGuard();
+  if (!ready) return null;
 
   return (
     <div className="admin-page">
       <p className="admin-kicker">Admin Portal</p>
       <h1 className="admin-title">Welcome, {user.firstName}</h1>
-      <p className="admin-sub">Pick a section to manage. These tools arrive with the next sprint.</p>
+      <p className="admin-sub">Pick a section to manage.</p>
 
       <div className="admin-grid">
         {SECTIONS.map(s => (
-          <div key={s.title} className="admin-tile">
-            <span className="admin-tile-icon">{s.icon}</span>
-            <h3>{s.title}</h3>
-            <p>{s.blurb}</p>
-            <span className="admin-tile-soon">Coming next sprint</span>
-          </div>
+          s.to ? (
+            <Link key={s.title} to={s.to} className="admin-tile">
+              <span className="admin-tile-icon">{s.icon}</span>
+              <h3>{s.title}</h3>
+              <p>{s.blurb}</p>
+              <span className="admin-tile-go">Open →</span>
+            </Link>
+          ) : (
+            <div key={s.title} className="admin-tile admin-tile-disabled">
+              <span className="admin-tile-icon">{s.icon}</span>
+              <h3>{s.title}</h3>
+              <p>{s.blurb}</p>
+              <span className="admin-tile-soon">Coming next sprint</span>
+            </div>
+          )
         ))}
       </div>
 

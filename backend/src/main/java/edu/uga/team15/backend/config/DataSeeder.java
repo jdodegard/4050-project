@@ -22,6 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -214,11 +215,20 @@ public class DataSeeder implements CommandLineRunner {
      * Schedules the currently-running movies across the next 3 days at
      * 2pm/5pm/8pm. Each room shows a different movie per slot, so the seed
      * data itself can never violate the conflict rule.
+     * If every seeded show has already gone by (db left running for a few
+     * days) the old schedule gets rebuilt, otherwise the movie pages would
+     * come up empty.
      */
     private void seedShows() {
-        if (showRepository.count() > 0) {
+        if (showRepository.existsByStartsAtAfter(LocalDateTime.now())) {
             return;
         }
+        if (showRepository.count() > 0) {
+            bookingRepository.deleteAll();   // tickets cascade off the booking
+            showRepository.deleteAll();
+            System.out.println("Seeded showtimes had expired, rebuilding the schedule.");
+        }
+
         List<Movie> running = movieRepository.findByStatus(MovieStatus.CURRENTLY_RUNNING);
         List<Showroom> rooms = showroomRepository.findAll();
         if (running.isEmpty() || rooms.isEmpty()) {

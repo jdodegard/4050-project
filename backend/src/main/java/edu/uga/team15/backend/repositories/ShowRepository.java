@@ -16,6 +16,9 @@ public interface ShowRepository extends JpaRepository<Show, Long> {
     /** The scheduling-conflict check: is this room already taken at this time? */
     boolean existsByShowroomIdAndStartsAt(Long showroomId, LocalDateTime startsAt);
 
+    /** Used by the seeder to tell a stale schedule from a fresh one. */
+    boolean existsByStartsAtAfter(LocalDateTime after);
+
     /** Everything an admin sees on the schedule page. */
     List<Show> findAllByOrderByStartsAt();
 }

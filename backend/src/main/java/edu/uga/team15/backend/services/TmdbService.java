@@ -56,7 +56,7 @@ public class TmdbService {
 
             for (JsonNode result : response.path("results")) {
                 long tmdbId = result.path("id").asLong(0);
-                String posterPath = result.path("poster_path").asText("");
+                String posterPath = result.path("poster_path").asString("");
                 if (tmdbId > 0 && !posterPath.isBlank()) {
                     return Optional.of(new TmdbMovie(
                             tmdbId,

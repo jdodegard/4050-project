@@ -3,6 +3,8 @@ package edu.uga.team15.backend.services;
 import edu.uga.team15.backend.models.Movie;
 import edu.uga.team15.backend.models.MovieStatus;
 import edu.uga.team15.backend.repositories.MovieRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +17,14 @@ import java.util.Optional;
 @Service
 public class MovieService {
 
-    private final MovieRepository movieRepository;
+    private static final Logger log = LoggerFactory.getLogger(MovieService.class);
 
-    public MovieService(MovieRepository movieRepository) {
+    private final MovieRepository movieRepository;
+    private final TmdbService tmdbService;
+
+    public MovieService(MovieRepository movieRepository, TmdbService tmdbService) {
         this.movieRepository = movieRepository;
+        this.tmdbService = tmdbService;
     }
 
     public List<Movie> getAllMovies() {
@@ -71,8 +77,22 @@ public class MovieService {
             throw new IllegalArgumentException("Pick a status: currently running or coming soon.");
         }
 
-        return movieRepository.save(new Movie(title.trim(), genre.trim(), rating.trim(),
-                blankToNull(description), blankToNull(posterUrl), blankToNull(trailerUrl), movieStatus));
+        Movie movie = new Movie(title.trim(), genre.trim(), rating.trim(),
+                blankToNull(description), blankToNull(posterUrl), blankToNull(trailerUrl), movieStatus);
+
+        if (movie.getPosterUrl() == null) {
+            tmdbService.findMovie(movie.getTitle()).ifPresent(tmdbMovie -> {
+                movie.setTmdbId(tmdbMovie.id());
+                movie.setPosterPath(tmdbMovie.posterPath());
+                movie.setPosterUrl(tmdbMovie.posterUrl());
+            });
+        }
+
+        Movie savedMovie = movieRepository.save(movie);
+        log.info("Added movie id={} title='{}' status={} tmdbEnriched={}",
+                savedMovie.getId(), savedMovie.getTitle(), savedMovie.getStatus(),
+                savedMovie.getTmdbId() != null);
+        return savedMovie;
     }
 
     private String blankToNull(String s) {

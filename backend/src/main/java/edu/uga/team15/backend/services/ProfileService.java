@@ -8,6 +8,8 @@ import edu.uga.team15.backend.repositories.AddressRepository;
 import edu.uga.team15.backend.repositories.MovieRepository;
 import edu.uga.team15.backend.repositories.PaymentCardRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ import java.util.Optional;
 public class ProfileService {
 
     public static final int MAX_CARDS = 3;
+    private static final Logger log = LoggerFactory.getLogger(ProfileService.class);
 
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
@@ -68,6 +71,7 @@ public class ProfileService {
         user.setPromoOptIn(promoOptIn);
         user = userRepository.save(user);
         emailService.sendAccountNotice(user, "Your profile information was just updated.");
+        log.info("Updated profile for user id={}", user.getId());
         return user;
     }
 
@@ -85,6 +89,7 @@ public class ProfileService {
         address.setZip(zip.trim());
         address = addressRepository.save(address);
         emailService.sendAccountNotice(user, "The address on your account was just updated.");
+        log.info("Saved address for user id={}", user.getId());
         return address;
     }
 
@@ -92,6 +97,7 @@ public class ProfileService {
     public void deleteAddress(User user) {
         addressRepository.deleteByUserId(user.getId());
         emailService.sendAccountNotice(user, "The address on your account was just removed.");
+        log.info("Deleted address for user id={}", user.getId());
     }
 
     /** Validates, encrypts and stores a card. Enforces the 3-card limit. */
@@ -117,6 +123,7 @@ public class ProfileService {
                 expMonth, expYear);
         card = cardRepository.save(card);
         emailService.sendAccountNotice(user, "A payment card ending in " + card.getLast4() + " was just added to your account.");
+        log.info("Added payment card id={} for user id={}", card.getId(), user.getId());
         return card;
     }
 
@@ -127,6 +134,7 @@ public class ProfileService {
                 .orElseThrow(() -> new IllegalArgumentException("Card not found."));
         cardRepository.delete(card);
         emailService.sendAccountNotice(user, "The payment card ending in " + card.getLast4() + " was just removed from your account.");
+        log.info("Deleted payment card id={} for user id={}", card.getId(), user.getId());
     }
 
     @Transactional
@@ -142,6 +150,7 @@ public class ProfileService {
                 .orElseThrow(() -> new IllegalArgumentException("Movie not found."));
         user.getFavorites().add(movie);
         userRepository.save(user);
+        log.info("Added movie id={} to favorites for user id={}", movieId, userId);
     }
 
     @Transactional
@@ -149,6 +158,7 @@ public class ProfileService {
         User user = userRepository.findById(userId).orElseThrow();
         user.getFavorites().removeIf(m -> m.getId().equals(movieId));
         userRepository.save(user);
+        log.info("Removed movie id={} from favorites for user id={}", movieId, userId);
     }
 
     private String detectCardType(String digits) {

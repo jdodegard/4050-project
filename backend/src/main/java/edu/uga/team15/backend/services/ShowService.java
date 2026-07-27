@@ -7,6 +7,8 @@ import edu.uga.team15.backend.repositories.BookingRepository;
 import edu.uga.team15.backend.repositories.MovieRepository;
 import edu.uga.team15.backend.repositories.ShowRepository;
 import edu.uga.team15.backend.repositories.ShowroomRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +24,8 @@ import java.util.Map;
  */
 @Service
 public class ShowService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShowService.class);
 
     private final ShowRepository showRepository;
     private final ShowroomRepository showroomRepository;
@@ -84,6 +88,9 @@ public class ShowService {
                     room.getName() + " already has a show at that time. Pick a different time or room.");
         }
 
-        return showRepository.save(new Show(movie, room, startsAt));
+        Show show = showRepository.save(new Show(movie, room, startsAt));
+        log.info("Scheduled show id={} movieId={} showroomId={} startsAt={}",
+                show.getId(), movie.getId(), room.getId(), startsAt);
+        return show;
     }
 }

@@ -4,6 +4,8 @@ import edu.uga.team15.backend.models.Promotion;
 import edu.uga.team15.backend.models.User;
 import edu.uga.team15.backend.repositories.PromotionRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,8 @@ import java.util.List;
  */
 @Service
 public class PromotionService {
+
+    private static final Logger log = LoggerFactory.getLogger(PromotionService.class);
 
     private final PromotionRepository promotionRepository;
     private final UserRepository userRepository;
@@ -60,6 +64,8 @@ public class PromotionService {
 
         List<User> subscribers = userRepository.findByPromoOptInTrue();
         subscribers.forEach(u -> emailService.sendPromotionEmail(u, promo));
+        log.info("Created promotion id={} code='{}' and notified {} subscribers",
+                promo.getId(), promo.getCode(), subscribers.size());
         return subscribers.size();
     }
 

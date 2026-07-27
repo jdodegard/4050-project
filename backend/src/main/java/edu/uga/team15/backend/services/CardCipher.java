@@ -1,6 +1,8 @@
 package edu.uga.team15.backend.services;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -20,6 +22,7 @@ public class CardCipher {
 
     private static final int IV_LENGTH = 12;
     private static final int TAG_BITS = 128;
+    private static final Logger log = LoggerFactory.getLogger(CardCipher.class);
 
     private final SecretKeySpec key;
     private final SecureRandom random = new SecureRandom();
@@ -46,6 +49,7 @@ public class CardCipher {
             System.arraycopy(ciphertext, 0, out, iv.length, ciphertext.length);
             return Base64.getEncoder().encodeToString(out);
         } catch (Exception e) {
+            log.error("Card-number encryption failed", e);
             throw new IllegalStateException("Failed to encrypt card number", e);
         }
     }
@@ -60,6 +64,7 @@ public class CardCipher {
             byte[] plaintext = cipher.doFinal(in, IV_LENGTH, in.length - IV_LENGTH);
             return new String(plaintext, StandardCharsets.UTF_8);
         } catch (Exception e) {
+            log.error("Card-number decryption failed", e);
             throw new IllegalStateException("Failed to decrypt card number", e);
         }
     }

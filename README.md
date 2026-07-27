@@ -66,6 +66,14 @@ After running docker compose up, go to localhost:8025 to check mail traffic
 Without them, emails are printed to the backend console instead - the links
 still work, just copy them out of the log.
 
+## TMDB posters
+
+When an admin adds a movie without a poster URL, the backend searches TMDB and
+stores the matched TMDB ID, poster path and full poster URL with the movie.
+Configure `TMDB_API_KEY` for the backend. During local Docker development the
+existing `VITE_TMDB_API_KEY` in `frontend/.env` is also accepted for backwards
+compatibility.
+
 ## Sprint 1 Features
 
 - Home page with Now Playing / Coming Soon sections (pulled from DB)

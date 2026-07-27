@@ -27,6 +27,10 @@ public class Movie {
 
     private String posterUrl;    // image link for the poster
 
+    private Long tmdbId;         // stable TMDB identity for future metadata refreshes
+
+    private String posterPath;   // TMDB-relative path, independent of image size
+
     private String trailerUrl;   // embeddable trailer link (e.g. YouTube embed URL)
 
     @Enumerated(EnumType.STRING)
@@ -64,6 +68,12 @@ public class Movie {
 
     public String getPosterUrl() { return posterUrl; }
     public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
+
+    public Long getTmdbId() { return tmdbId; }
+    public void setTmdbId(Long tmdbId) { this.tmdbId = tmdbId; }
+
+    public String getPosterPath() { return posterPath; }
+    public void setPosterPath(String posterPath) { this.posterPath = posterPath; }
 
     public String getTrailerUrl() { return trailerUrl; }
     public void setTrailerUrl(String trailerUrl) { this.trailerUrl = trailerUrl; }

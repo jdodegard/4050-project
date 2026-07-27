@@ -5,6 +5,8 @@ import edu.uga.team15.backend.models.User;
 import edu.uga.team15.backend.models.UserStatus;
 import edu.uga.team15.backend.repositories.AccountTokenRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ import java.util.UUID;
  */
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final AccountTokenRepository tokenRepository;
@@ -59,6 +63,7 @@ public class AuthService {
 
         String token = newToken(user, AccountToken.Purpose.ACTIVATION, 24 * 60);
         emailService.sendActivationEmail(user, token);
+        log.info("Registered inactive user id={}", user.getId());
         return user;
     }
 
@@ -70,6 +75,7 @@ public class AuthService {
         User user = t.getUser();
         user.setStatus(UserStatus.ACTIVE);
         t.setUsed(true);
+        log.info("Activated user id={}", user.getId());
         return user;
     }
 
@@ -89,6 +95,7 @@ public class AuthService {
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new IllegalArgumentException("This account has been suspended. Contact support for help.");
         }
+        log.info("Authenticated user id={} role={}", user.getId(), user.getRole());
         return user;
     }
 
@@ -104,6 +111,7 @@ public class AuthService {
         userRepository.findByEmailIgnoreCase(email.trim()).ifPresent(user -> {
             String token = newToken(user, AccountToken.Purpose.PASSWORD_RESET, 60);
             emailService.sendPasswordResetEmail(user, token);
+            log.info("Issued password-reset email for user id={}", user.getId());
         });
     }
 
@@ -118,6 +126,7 @@ public class AuthService {
         user.setPasswordHash(encoder.encode(newPassword));
         t.setUsed(true);
         emailService.sendAccountNotice(user, "Your password was just reset through the forgot-password link.");
+        log.info("Completed password reset for user id={}", user.getId());
     }
 
     /** Change password from the profile page - requires the current password. */
@@ -132,6 +141,7 @@ public class AuthService {
         user.setPasswordHash(encoder.encode(newPassword));
         userRepository.save(user);
         emailService.sendAccountNotice(user, "Your password was just changed from the profile page.");
+        log.info("Changed password for user id={}", user.getId());
     }
 
     private String newToken(User user, AccountToken.Purpose purpose, int minutesValid) {

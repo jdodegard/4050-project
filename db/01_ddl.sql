@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS movies (
     rating        VARCHAR(10),                -- MPAA: G, PG, PG-13, R...
     description   VARCHAR(2000),
     poster_url    VARCHAR(500),
+    tmdb_id       BIGINT,
+    poster_path   VARCHAR(255),
     trailer_url   VARCHAR(500),
     status        VARCHAR(30) NOT NULL,       -- CURRENTLY_RUNNING / COMING_SOON
     CONSTRAINT chk_movie_status CHECK (status IN ('CURRENTLY_RUNNING', 'COMING_SOON'))

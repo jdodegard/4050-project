@@ -2,6 +2,8 @@ package edu.uga.team15.backend.services;
 
 import edu.uga.team15.backend.models.Promotion;
 import edu.uga.team15.backend.models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final ObjectProvider<JavaMailSender> mailSender;
 
@@ -73,6 +77,7 @@ public class EmailService {
         JavaMailSender sender = mailSender.getIfAvailable();
         if (sender == null || mailUsername == null || mailUsername.isBlank()) {
             // no SMTP credentials configured - log instead of failing
+            log.info("SMTP is not configured; writing '{}' email to the local console", subject);
             System.out.println("---- email (SMTP not configured) ----");
             System.out.println("To: " + to);
             System.out.println("Subject: " + subject);
@@ -87,5 +92,6 @@ public class EmailService {
         message.setSubject(subject);
         message.setText(body);
         sender.send(message);
+        log.info("Sent email with subject '{}'", subject);
     }
 }

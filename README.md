@@ -74,6 +74,17 @@ Configure `TMDB_API_KEY` for the backend. During local Docker development the
 existing `VITE_TMDB_API_KEY` in `frontend/.env` is also accepted for backwards
 compatibility.
 
+## Mock checkout
+
+Checkout performs server-side price and seat validation, then creates a
+confirmed booking and tickets in one database transaction. Payments for the
+same show are serialized so only one customer can purchase a seat. No card
+details are stored or charged.
+
+- Accepted test card: `4242 4242 4242 4242`
+- Declined test card: `4000 0000 0000 0002`
+- Use any future `MM/YY` expiry and a 3- or 4-digit CVV
+
 ## Sprint 1 Features
 
 - Home page with Now Playing / Coming Soon sections (pulled from DB)

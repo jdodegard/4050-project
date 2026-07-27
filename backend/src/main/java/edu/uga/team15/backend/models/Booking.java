@@ -8,8 +8,7 @@ import java.util.List;
 
 /**
  * A user's order for one show. Tickets hang off it, one per seat.
- * For this sprint bookings only get created as seed data so the seat maps
- * have some taken seats; the real checkout writes these in the final sprint.
+ * Confirmed bookings make their ticket seats unavailable to other customers.
  */
 @Entity
 @Table(name = "bookings")
@@ -37,6 +36,12 @@ public class Booking {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    private String confirmationEmail;
+
+    private double totalAmount;
+
+    private String paymentReference;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
 
@@ -62,6 +67,15 @@ public class Booking {
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public String getConfirmationEmail() { return confirmationEmail; }
+    public void setConfirmationEmail(String confirmationEmail) { this.confirmationEmail = confirmationEmail; }
+
+    public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
 
     public List<Ticket> getTickets() { return tickets; }
     public void setTickets(List<Ticket> tickets) { this.tickets = tickets; }

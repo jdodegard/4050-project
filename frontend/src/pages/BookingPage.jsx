@@ -29,7 +29,13 @@ export default function BookingPage() {
   useEffect(() => {
     if (!show) return;
     fetchSeatMap(show.id)
-      .then(setSeatInfo)
+      .then(info => {
+        setSeatInfo(info);
+        const taken = new Set(info.taken);
+        setSelectedSeats(previous =>
+          new Set(Array.from(previous).filter(seat => !taken.has(seat)))
+        );
+      })
       .catch(() => setSeatError(true));
   }, [show?.id]);
 

@@ -81,16 +81,22 @@ Run as one continuous path: movie > showtime > tickets > seat map.
 | 6.1 | Do 5.1-5.8 signed OUT, hit Proceed to Checkout | Sent to the login page |
 | 6.2 | Sign in as joe | Land back on checkout, same seats still selected |
 
-## 7. Checkout + email confirm (built, graded at the FINAL demo)
+## 7. Checkout + mock payment
 
-Implemented already, excluded from Sprint 3 grading per the announcement.
+The Sprint 3 rubric only requires the payment-page mockup. The accepted/declined
+mock-payment paths and final seat confirmation are implemented beyond that scope.
 
 | # | Steps | Expected |
 |---|-------|----------|
 | 7.1 | Checkout page | Movie, showtime, seats, per-ticket prices, total before tax, then tax + total |
 | 7.2 | Email step | Account email preselected, can switch to a typed email |
 | 7.3 | Type "notanemail" as the other email | "Enter a valid email address.", stays on the page |
-| 7.4 | Continue | Payment page mockup, Pay button disabled, flow ends here |
+| 7.4 | Continue with a valid confirmation email | Payment page opens with required card fields and the correct order total |
+| 7.5 | Submit `4242 4242 4242 4242`, any name, a future `MM/YY`, and a 3- or 4-digit CVV | Payment accepted; confirmation shows booking number, payment reference, and selected seats |
+| 7.6 | Reload the same show's seat map after 7.5 | Purchased seats are unavailable |
+| 7.7 | Submit `4000 0000 0000 0002` with otherwise valid fields | Mock payment is declined; no booking is created and the booking draft remains |
+| 7.8 | Submit a malformed card number, expired date, or invalid CVV | Helpful validation error; no booking is created |
+| 7.9 | Have two sessions select the same seat, then pay in the first followed by the second | First succeeds; second receives a seat-unavailable message and can return to choose another seat |
 
 ## 8. Promotions (bonus)
 
@@ -105,7 +111,10 @@ Implemented already, excluded from Sprint 3 grading per the announcement.
 
 - The whole thing is one flow: add a movie as admin, schedule it into a room,
   then book it as a user and watch the taken seats show up.
-- Every server-side rejection above also has a DB-level backstop (unique
-  constraint on showroom+time, CHECK constraints in the DDL), so bad data
-  can't sneak in around the API either.
-- Seat locking / auto-unlock after 5 min is final-demo scope by design.
+- Critical inputs are validated by the server. The DDL additionally enforces
+  constraints such as unique showroom/start time, unique promotion codes, and
+  valid enum-like status/type values.
+- Seat selections are retained in `sessionStorage` through login, but they are
+  not pre-payment server reservations. At payment time the backend locks the
+  show, rechecks availability, and writes the booking and tickets atomically.
+  Therefore there is currently no temporary hold that needs a 5-minute unlock.

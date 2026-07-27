@@ -122,9 +122,11 @@ details are stored or charged.
 - Booking page pulls the real seat map for the show's room and greys out
   seats other people already booked; selection must match the ticket count
 - Checkout flow: order summary (per-ticket prices, total before tax), confirm
-  your account email or enter a different one, then the payment page (mockup -
-  processing comes with the final demo)
+  your account email or enter a different one, then submit a mock card payment;
+  accepted payments create the booking and make its seats unavailable, while
+  declined payments leave the booking draft intact
 - Checkout requires login: signed-out users get sent to the login page and
-  come right back with their seats still held (draft parked in sessionStorage)
+  come right back with their seat selections restored (draft parked in
+  sessionStorage; availability is rechecked when payment is submitted)
 - Demo users: `joe@cinemabook.com` / `JoePass!123` (3 saved cards) and
   `jane@cinemabook.com` / `JanePass!123` (favorites + promo opt-in)

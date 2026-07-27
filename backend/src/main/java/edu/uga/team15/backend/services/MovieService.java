@@ -1,86 +1,101 @@
 package edu.uga.team15.backend.services;
 
-import javax.sql.DataSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import edu.uga.team15.backend.models.Movie;
-import java.util.List;
-import java.util.ArrayList;
-import java.sql.*;
+import edu.uga.team15.backend.models.MovieStatus;
+import edu.uga.team15.backend.repositories.MovieRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Business logic for movies. Sits between the controller and the repository
+ * so the API layer stays thin.
+ */
 @Service
 public class MovieService {
 
-    private final DataSource dataSource;
+    private static final Logger log = LoggerFactory.getLogger(MovieService.class);
 
-    @Autowired
-    public MovieService(DataSource dataSource) {
-        this.dataSource = dataSource;
+    private final MovieRepository movieRepository;
+    private final TmdbService tmdbService;
+
+    public MovieService(MovieRepository movieRepository, TmdbService tmdbService) {
+        this.movieRepository = movieRepository;
+        this.tmdbService = tmdbService;
     }
 
-    /**
-     * Gives list of all movies that are coming soon
-     */
-    public List<Movie> getComingSoon() {
-        String sql = """
-                SELECT *
-                FROM Movies
-                WHERE showing_status = 'Coming Soon'
-                """;
-        List<Movie> comin = new ArrayList<>();
-        
-         try (Connection conn = dataSource.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    public List<Movie> getAllMovies() {
+        return movieRepository.findAll();
+    }
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        comin.add(new Movie(rs.getInt("movie_id"), 
-                        rs.getString("title"), 
-                        rs.getString("rating"), 
-                        rs.getString("description"), 
-                        rs.getString("poster_url"), 
-                        rs.getString("trailer_url"), 
-                        rs.getString("genre"), 
-                        rs.getString("showing_status")));
-                    }
-                }
+    public List<Movie> getByStatus(MovieStatus status) {
+        return movieRepository.findByStatus(status);
+    }
 
-             } catch (SQLException e) {
-                throw new RuntimeException("Failed to get movies coming soon", e);
-             }
-        return comin;
-    }//getComingSoon()
+    public Optional<Movie> getById(Long id) {
+        return movieRepository.findById(id);
+    }
 
-    /**
-     * Gives list of all movies that are coming soon
-     */
-    public List<Movie> getCurrentlyRunning() {
-        String sql = """
-                SELECT *
-                FROM Movies
-                WHERE showing_status = 'Currently Running'
-                """;
-        
-        List<Movie> playin = new ArrayList<>();
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    public List<Movie> searchByTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return movieRepository.findAll();
+        }
+        return movieRepository.findByTitleContainingIgnoreCase(title.trim());
+    }
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        playin.add(new Movie(rs.getInt("movie_id"), 
-                        rs.getString("title"), 
-                        rs.getString("rating"), 
-                        rs.getString("description"), 
-                        rs.getString("poster_url"), 
-                        rs.getString("trailer_url"), 
-                        rs.getString("genre"), 
-                        rs.getString("showing_status")));
-                    }
-                }
+    public List<Movie> filterByGenre(String genre) {
+        if (genre == null || genre.isBlank()) {
+            return movieRepository.findAll();
+        }
+        return movieRepository.findByGenreIgnoreCase(genre.trim());
+    }
 
-             } catch (SQLException e) {
-                throw new RuntimeException("Failed to get movies coming soon", e);
-             }
-        return playin;
-    }//getComingSoon()
+    public List<String> getGenres() {
+        return movieRepository.findDistinctGenres();
+    }
+
+    /** Admin add-movie. Same fields as the seed data, validated. */
+    public Movie addMovie(String title, String genre, String rating, String description,
+                          String posterUrl, String trailerUrl, String status) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Title is required.");
+        }
+        if (genre == null || genre.isBlank()) {
+            throw new IllegalArgumentException("Genre is required.");
+        }
+        if (rating == null || rating.isBlank()) {
+            throw new IllegalArgumentException("Pick an MPAA rating.");
+        }
+
+        MovieStatus movieStatus;
+        try {
+            movieStatus = MovieStatus.valueOf(status);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Pick a status: currently running or coming soon.");
+        }
+
+        Movie movie = new Movie(title.trim(), genre.trim(), rating.trim(),
+                blankToNull(description), blankToNull(posterUrl), blankToNull(trailerUrl), movieStatus);
+
+        if (movie.getPosterUrl() == null) {
+            tmdbService.findMovie(movie.getTitle()).ifPresent(tmdbMovie -> {
+                movie.setTmdbId(tmdbMovie.id());
+                movie.setPosterPath(tmdbMovie.posterPath());
+                movie.setPosterUrl(tmdbMovie.posterUrl());
+            });
+        }
+
+        Movie savedMovie = movieRepository.save(movie);
+        log.info("Added movie id={} title='{}' status={} tmdbEnriched={}",
+                savedMovie.getId(), savedMovie.getTitle(), savedMovie.getStatus(),
+                savedMovie.getTmdbId() != null);
+        return savedMovie;
+    }
+
+    private String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
+    }
 }

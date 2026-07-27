@@ -31,6 +31,60 @@ React + Vite frontend for the Cinema E-Booking System (CSCI 4050/6050, Team 15).
     - docker compose down
         - Add the -v flag if you want to wipe the db volume and start from scratch
 
+## Running without Docker (local dev)
+
+Backend (uses a file-based H2 db instead of the MySQL container):
+
+    cd backend
+    SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
+
+Frontend:
+
+    cd frontend
+    npm install
+    npm run dev
+
+Frontend runs on http://localhost:3000, backend on http://localhost:8080.
+
+## Accounts
+
+- The backend seeds an admin on first boot: `admin@ces.com` / `admin1234`
+  (admins get redirected to the admin portal after login)
+- Customer accounts are created through the registration page and start
+  INACTIVE until the emailed confirmation link is clicked
+
+## Emails
+
+Confirmation links, password resets and account-change notices go out over
+SMTP when these env vars are set on the backend:
+
+After running docker compose up, go to localhost:8025 to check mail traffic
+
+    MAIL_USERNAME=yourgmail@gmail.com
+    MAIL_PASSWORD=your-gmail-app-password
+
+Without them, emails are printed to the backend console instead - the links
+still work, just copy them out of the log.
+
+## TMDB posters
+
+When an admin adds a movie without a poster URL, the backend searches TMDB and
+stores the matched TMDB ID, poster path and full poster URL with the movie.
+Configure `TMDB_API_KEY` for the backend. During local Docker development the
+existing `VITE_TMDB_API_KEY` in `frontend/.env` is also accepted for backwards
+compatibility.
+
+## Mock checkout
+
+Checkout performs server-side price and seat validation, then creates a
+confirmed booking and tickets in one database transaction. Payments for the
+same show are serialized so only one customer can purchase a seat. No card
+details are stored or charged.
+
+- Accepted test card: `4242 4242 4242 4242`
+- Declined test card: `4000 0000 0000 0002`
+- Use any future `MM/YY` expiry and a 3- or 4-digit CVV
+
 ## Sprint 1 Features
 
 - Home page with Now Playing / Coming Soon sections (pulled from DB)
@@ -38,3 +92,39 @@ React + Vite frontend for the Cinema E-Booking System (CSCI 4050/6050, Team 15).
 - Search by title
 - Filter by genre
 - Booking page prototype (seat map, ticket selection, order summary)
+
+## Sprint 2 Features
+
+- Registration with email confirmation (accounts start inactive), optional
+  address + payment card, promo opt-in
+- Login/logout with sessions, role-based redirect (admin portal vs home),
+  proper error messages for wrong creds / unconfirmed / suspended accounts
+- Forgot password + reset password through emailed one-time links
+- Change password (requires the current password)
+- Edit profile: personal info (email locked), one saved address, up to 3
+  payment cards (AES-encrypted, only last 4 shown), favorites list
+- Favorite movies via the heart on any movie card or the details page
+- Passwords hashed with BCrypt; email notification on every account change
+- Admin portal home page (prototype menu: movies, showtimes, promotions, users)
+
+## Sprint 3 Features
+
+- Real showtime scheduling: shows live in their own table (movie + showroom +
+  start time), movie pages list them grouped by day straight from the DB
+- 3 seeded showrooms with different layouts (8x12, 6x10, 5x8), plus 3 days of
+  seeded showtimes across all rooms and a couple of pre-booked seats
+- Admin > Manage Movies: add-movie form with validation, live catalog table
+- Admin > Manage Showtimes: pick movie/room/date/time, full schedule table,
+  double-booking a room at the same time gets rejected (service check + DB
+  unique constraint)
+- Admin > Manage Promotions (bonus): create promo codes, automatically emails
+  every user who opted in to promo emails
+- Booking page pulls the real seat map for the show's room and greys out
+  seats other people already booked; selection must match the ticket count
+- Checkout flow: order summary (per-ticket prices, total before tax), confirm
+  your account email or enter a different one, then the payment page (mockup -
+  processing comes with the final demo)
+- Checkout requires login: signed-out users get sent to the login page and
+  come right back with their seats still held (draft parked in sessionStorage)
+- Demo users: `joe@cinemabook.com` / `JoePass!123` (3 saved cards) and
+  `jane@cinemabook.com` / `JanePass!123` (favorites + promo opt-in)

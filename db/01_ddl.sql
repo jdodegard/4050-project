@@ -1,63 +1,145 @@
--- This file populates the data into MySQL, including dummy data for 10 movies as per Deliverable 2
+-- Cinema E-Booking System - MySQL schema (Team 15)
+--
+-- Mapped from the Deliverable 3 domain class diagram. The Spring backend
+-- manages the same tables through JPA (ddl-auto=update), so this file is the
+-- reference schema + what the MySQL container runs on first startup.
+-- Movie/admin seed data is inserted by the backend on boot, not here.
 
-DROP TABLE IF EXISTS Movies;
-DROP TABLE IF EXISTS Showtimes;
+-- ---------------------------------------------------------------------
+-- movies
+-- ---------------------------------------------------------------------
 
-
-CREATE TABLE Movies (
-    movie_id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255) NOT NULL,
-    rating VARCHAR(10) NOT NULL,       
-    description TEXT NOT NULL,
-    poster_url VARCHAR(500) NOT NULL,  
-    trailer_url VARCHAR(500) NOT NULL, 
-    genre VARCHAR(100) NOT NULL,       
-    showing_status VARCHAR(50) NOT NULL CHECK (showing_status IN ('Currently Running', 'Coming Soon'))
+CREATE TABLE IF NOT EXISTS movies (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title         VARCHAR(255) NOT NULL,
+    genre         VARCHAR(100),
+    rating        VARCHAR(10),                -- MPAA: G, PG, PG-13, R...
+    description   VARCHAR(2000),
+    poster_url    VARCHAR(500),
+    tmdb_id       BIGINT,
+    poster_path   VARCHAR(255),
+    trailer_url   VARCHAR(500),
+    status        VARCHAR(30) NOT NULL,       -- CURRENTLY_RUNNING / COMING_SOON
+    CONSTRAINT chk_movie_status CHECK (status IN ('CURRENTLY_RUNNING', 'COMING_SOON'))
 );
 
-CREATE TABLE Showtimes (
-    showtime_id INT PRIMARY KEY AUTO_INCREMENT,
-    movie_id INT,
-    show_date DATE NOT NULL,           
-    show_time VARCHAR(20) NOT NULL,    -- Hardcoded intervals (e.g., '2:00 PM')
-    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE
+-- ---------------------------------------------------------------------
+-- accounts
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS users (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    first_name    VARCHAR(255) NOT NULL,
+    last_name     VARCHAR(255) NOT NULL,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,      -- BCrypt, never plaintext
+    phone         VARCHAR(30),
+    role          VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+    status        VARCHAR(20) NOT NULL DEFAULT 'INACTIVE',
+    promo_opt_in  BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_user_role   CHECK (role IN ('CUSTOMER', 'ADMIN')),
+    CONSTRAINT chk_user_status CHECK (status IN ('INACTIVE', 'ACTIVE', 'SUSPENDED'))
 );
 
-INSERT INTO Movies (movie_id, title, rating, description, poster_url, trailer_url, genre, showing_status) VALUES
--- Currently Running
-(1, 'Toy Story 5', 'G', 'The legendary toy gang faces a modern tech challenge as digital devices disrupt the play ecosystem.', '/assets/posters/toy_story_5.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Animation', 'Currently Running'),
-(2, 'Supergirl', 'PG-13', 'Kara Zor-El travels the cosmos to move beyond her past and claim her identity as a powerful hero.', '/assets/posters/supergirl.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Action', 'Currently Running'),
-(3, 'Disclosure Day', 'PG-13', 'A high-stakes science fiction thriller logging the societal fallout of an sudden planetary discovery.', '/assets/posters/disclosure_day.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Sci-Fi', 'Currently Running'),
-(4, 'The Death of Robin Hood', 'R', 'An aging outlaw finds himself gravely wounded and facing his history while under the care of a mysterious stranger.', '/assets/posters/robin_hood.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Drama', 'Currently Running'),
-(5, 'Power Ballad', 'R', 'A past-his-prime wedding vocalist is thrown into a chaotic partnership with an unstable boy-band performer.', '/assets/posters/power_ballad.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Comedy', 'Currently Running'),
+-- one address per user, enforced by the UNIQUE user_id
+CREATE TABLE IF NOT EXISTS addresses (
+    id       BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id  BIGINT NOT NULL UNIQUE,
+    street   VARCHAR(255) NOT NULL,
+    city     VARCHAR(100) NOT NULL,
+    state    VARCHAR(50)  NOT NULL,
+    zip      VARCHAR(20)  NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
--- Coming Soon
-(6, 'Minions & Monsters', 'PG', 'Gru and his yellow companions embark on a hilarious journey deep into an enchanted world filled with chaotic creatures.', '/assets/posters/minions_monsters.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Animation', 'Coming Soon'),
-(7, 'Moana', 'PG', 'The highly-anticipated live-action adaptation tracing the classic ocean voyage with Maui and Moana.', '/assets/posters/moana.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Adventure', 'Coming Soon'),
-(8, 'The Odyssey', 'R', 'An expansive historical drama following structural conflicts across a demanding ocean navigation campaign.', '/assets/posters/odyssey.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Adventure', 'Coming Soon'),
-(9, 'Spider-Man: Brand New Day', 'PG-13', 'Peter Parker navigates shifting alliances and complex threats to defend his city from collapse.', '/assets/posters/spiderman.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Action', 'Coming Soon'),
-(10, 'Ice Cream Man', 'R', 'A nostalgic suburban truck harbors deep horrors when local neighborhoods discover what its freezer actually contains.', '/assets/posters/ice_cream_man.jpg', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'Horror', 'Coming Soon');
+-- card numbers are AES-encrypted by the backend before insert;
+-- the 3-cards-per-user max is enforced in the service layer
+CREATE TABLE IF NOT EXISTS payment_cards (
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT NOT NULL,
+    card_type       VARCHAR(20),              -- Visa / Mastercard / Amex / Discover
+    card_number_enc VARCHAR(512) NOT NULL,
+    last4           VARCHAR(4) NOT NULL,
+    exp_month       INT NOT NULL,
+    exp_year        INT NOT NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
+-- single-use email tokens (account confirmation, password reset)
+CREATE TABLE IF NOT EXISTS account_tokens (
+    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+    token      VARCHAR(64) NOT NULL UNIQUE,
+    user_id    BIGINT NOT NULL,
+    purpose    VARCHAR(20) NOT NULL,          -- ACTIVATION / PASSWORD_RESET
+    expires_at TIMESTAMP NOT NULL,
+    used       BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
-INSERT INTO Showtimes (movie_id, show_date, show_time) VALUES
--- Toy Story 5
-(1, '2026-06-30', '2:00 PM'),
-(1, '2026-06-30', '5:00 PM'),
-(1, '2026-06-30', '8:00 PM'),
+-- user <-> movie many-to-many for the favorites list
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id  BIGINT NOT NULL,
+    movie_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, movie_id),
+    FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
 
--- Supergirl
-(2, '2026-06-30', '2:00 PM'),
-(2, '2026-06-30', '5:00 PM'),
-(2, '2026-06-30', '8:00 PM'),
+-- ---------------------------------------------------------------------
+-- scheduling + booking
+-- ---------------------------------------------------------------------
 
--- Disclosure Day
-(3, '2026-07-01', '2:00 PM'),
-(3, '2026-07-01', '8:00 PM'),
+-- seat labels (A1..H12) are derived from rows x seats per row, so there is
+-- no separate seats table; tickets store the label directly
+CREATE TABLE IF NOT EXISTS showrooms (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name          VARCHAR(255) NOT NULL,
+    seat_rows     INT NOT NULL,
+    seats_per_row INT NOT NULL
+);
 
--- The Death of Robin Hood
-(4, '2026-07-01', '5:00 PM'),
-(4, '2026-07-01', '8:00 PM'),
+CREATE TABLE IF NOT EXISTS shows (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    movie_id    BIGINT NOT NULL,
+    showroom_id BIGINT NOT NULL,
+    starts_at   DATETIME NOT NULL,
+    FOREIGN KEY (movie_id)    REFERENCES movies(id)    ON DELETE CASCADE,
+    FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE CASCADE,
+    -- the scheduling-conflict rule: one show per room per start time
+    UNIQUE (showroom_id, starts_at)
+);
 
--- Power Ballad
-(5, '2026-07-02', '2:00 PM'),
-(5, '2026-07-02', '5:00 PM');
+CREATE TABLE IF NOT EXISTS promotions (
+    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code             VARCHAR(50) NOT NULL UNIQUE,
+    description      VARCHAR(255),
+    discount_percent INT NOT NULL,
+    start_date       DATE NOT NULL,
+    end_date         DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id    BIGINT NOT NULL,
+    show_id    BIGINT NOT NULL,
+    status     VARCHAR(20) NOT NULL DEFAULT 'CONFIRMED',
+    confirmation_email VARCHAR(255),
+    total_amount DOUBLE NOT NULL DEFAULT 0,
+    payment_reference VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE,
+    CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED'))
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    booking_id  BIGINT NOT NULL,
+    seat_label  VARCHAR(5) NOT NULL,          -- e.g. 'C7'
+    ticket_type VARCHAR(10) NOT NULL,         -- ADULT / SENIOR / CHILD
+    price       DECIMAL(6,2) NOT NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT chk_ticket_type CHECK (ticket_type IN ('ADULT', 'SENIOR', 'CHILD'))
+);

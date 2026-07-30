@@ -33,4 +33,7 @@ public interface ShowRepository extends JpaRepository<Show, Long> {
 
     /** Everything an admin sees on the schedule page. */
     List<Show> findAllByOrderByStartsAt();
+
+    /** Every upcoming show, for the home page date filter. */
+    List<Show> findByStartsAtAfterOrderByStartsAt(LocalDateTime after);
 }

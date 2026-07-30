@@ -18,10 +18,14 @@ public class ShowController {
         this.showService = showService;
     }
 
-    /** Upcoming showtimes for one movie: /api/shows?movieId=3 */
+    /**
+     * Upcoming showtimes for one movie: /api/shows?movieId=3
+     * Leave movieId off and you get every upcoming show, which is what the
+     * home page date filter needs.
+     */
     @GetMapping
-    public List<Show> getShows(@RequestParam Long movieId) {
-        return showService.getUpcomingForMovie(movieId);
+    public List<Show> getShows(@RequestParam(required = false) Long movieId) {
+        return movieId == null ? showService.getAllUpcoming() : showService.getUpcomingForMovie(movieId);
     }
 
     /** Seat layout + taken seats for the booking page: /api/shows/{id}/seats */

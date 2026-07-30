@@ -51,6 +51,11 @@ public class ShowService {
         return showRepository.findAllByOrderByStartsAt();
     }
 
+    /** Every upcoming show. The home page uses this to filter movies by date. */
+    public List<Show> getAllUpcoming() {
+        return showRepository.findByStartsAtAfterOrderByStartsAt(LocalDateTime.now());
+    }
+
     public List<Showroom> getShowrooms() {
         return showroomRepository.findAll();
     }

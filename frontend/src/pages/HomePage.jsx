@@ -7,14 +7,30 @@ import {
   filterMoviesByGenre,
   fetchGenres,
 } from '../api/moviesApi';
+import { fetchUpcomingShows } from '../api/showsApi';
 import './HomePage.css';
 
-const SHOW_DATES = ['Any Date', 'Today', 'This Week', 'This Weekend', 'Next Week'];
+const ANY_DATE = 'Any Date';
 const HERO_WORDS = ['Perfect', 'Epic', 'Cinematic', 'Legendary', 'Unforgettable'];
 
 function isNowPlaying(movie) {
   const s = (movie.status || '').toUpperCase();
   return s.includes('NOW') || s.includes('RUNNING') || s.includes('CURRENT') || s === 'PLAYING';
+}
+
+// "2026-07-31" straight off the show, no timezone maths needed
+function showDay(startsAt) {
+  return String(startsAt).slice(0, 10);
+}
+
+// Fri, Jul 31 - what actually goes in the dropdown
+function labelForDay(day) {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 export default function HomePage() {
@@ -27,7 +43,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [genre, setGenre] = useState('All');
-  const [selectedDate] = useState('Any Date');
+  const [selectedDate, setSelectedDate] = useState(ANY_DATE);
+  const [shows, setShows] = useState([]);
   const [wordIdx, setWordIdx] = useState(0);
   const heroRef = useRef(null);
 
@@ -51,6 +68,14 @@ export default function HomePage() {
     fetchGenres()
       .then(list => setGenres(['All', ...list]))
       .catch(() => setGenres(['All']));
+  }, []);
+
+  // the whole upcoming schedule, so picking a date can narrow the grid without
+  // another round trip every time the dropdown changes
+  useEffect(() => {
+    fetchUpcomingShows()
+      .then(setShows)
+      .catch(() => setShows([]));
   }, []);
 
   // any time the search text or chosen genre changes we go back to the backend.
@@ -90,12 +115,23 @@ export default function HomePage() {
     return () => { alive = false; clearTimeout(t); };
   }, [urlSearch, genre]);
 
-  const nowPlaying = movies.filter(isNowPlaying);
-  const comingSoon = movies.filter(m => !isNowPlaying(m));
-  const isFiltering = urlSearch.trim() || genre !== 'All';
+  // only offer days the cinema is actually screening something
+  const showDays = [...new Set(shows.map(s => showDay(s.startsAt)))].sort();
+
+  // which movies have a screening on the chosen day
+  const datedIds = selectedDate === ANY_DATE ? null : new Set(
+    shows.filter(s => showDay(s.startsAt) === selectedDate).map(s => s.movie.id)
+  );
+
+  const visible = datedIds ? movies.filter(m => datedIds.has(m.id)) : movies;
+
+  const nowPlaying = visible.filter(isNowPlaying);
+  const comingSoon = visible.filter(m => !isNowPlaying(m));
+  const isFiltering = urlSearch.trim() || genre !== 'All' || selectedDate !== ANY_DATE;
 
   function clearAll() {
     setGenre('All');
+    setSelectedDate(ANY_DATE);
     navigate('/');
   }
 
@@ -145,16 +181,15 @@ export default function HomePage() {
           </select>
         </div>
 
-        <div className="filter-group filter-group-disabled">
-          <label>Show Date <span className="coming-label">(coming soon)</span></label>
+        <div className="filter-group">
+          <label>Show Date</label>
           <select
             value={selectedDate}
-            onChange={() => {}}
+            onChange={e => setSelectedDate(e.target.value)}
             className="filter-select"
-            disabled
-            title="show date filter lands next sprint"
           >
-            {SHOW_DATES.map(d => <option key={d} value={d}>{d}</option>)}
+            <option value={ANY_DATE}>{ANY_DATE}</option>
+            {showDays.map(d => <option key={d} value={d}>{labelForDay(d)}</option>)}
           </select>
         </div>
 

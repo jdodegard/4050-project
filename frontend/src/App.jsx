@@ -17,6 +17,8 @@ import AdminPage from './pages/AdminPage';
 import AdminMoviesPage from './pages/AdminMoviesPage';
 import AdminShowtimesPage from './pages/AdminShowtimesPage';
 import AdminPromotionsPage from './pages/AdminPromotionsPage';
+import AdminSubscribersPage from './pages/AdminSubscribersPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 
 export default function App() {
   return (
@@ -40,6 +42,8 @@ export default function App() {
           <Route path="/admin/movies" element={<AdminMoviesPage />} />
           <Route path="/admin/showtimes" element={<AdminShowtimesPage />} />
           <Route path="/admin/promotions" element={<AdminPromotionsPage />} />
+          <Route path="/admin/subscribers" element={<AdminSubscribersPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

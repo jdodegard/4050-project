@@ -31,6 +31,18 @@ React + Vite frontend for the Cinema E-Booking System (CSCI 4050/6050, Team 15).
     - docker compose down
         - Add the -v flag if you want to wipe the db volume and start from scratch
 
+### Ports and clock
+
+- Frontend 3000, backend 8080, Mailpit 8025.
+- MySQL is published on **3307**, not 3306, because a locally installed MySQL
+  usually already owns 3306 and would stop the container from starting. Set
+  `MYSQL_HOST_PORT` to change it. Nothing in the app uses the host port - the
+  backend talks to the DB over the compose network.
+- The backend container is pinned to `America/New_York`. It compares showtimes
+  against its own clock, so on UTC it would reject a show scheduled for later
+  today as "must be in the future". Override with `TZ` if you're elsewhere.
+- A fresh clone has no `frontend/.env` (it's gitignored) and does not need one.
+
 ## Running without Docker (local dev)
 
 Backend (uses a file-based H2 db instead of the MySQL container):
@@ -73,6 +85,11 @@ stores the matched TMDB ID, poster path and full poster URL with the movie.
 Configure `TMDB_API_KEY` for the backend. During local Docker development the
 existing `VITE_TMDB_API_KEY` in `frontend/.env` is also accepted for backwards
 compatibility.
+
+With no key configured there is no lookup: the movie saves with a null poster
+and the card falls back to the CES placeholder. Paste a direct image URL into
+the poster field if you want artwork - it has to be a real image link (one
+ending in `.jpg`, for example), not a link to a search results page.
 
 ## Mock checkout
 

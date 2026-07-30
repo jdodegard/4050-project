@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** Who gets promotion emails. */
     List<User> findByPromoOptInTrue();
+
+    /** Stable order for the admin user table so rows don't jump around. */
+    List<User> findAllByOrderByIdAsc();
 }

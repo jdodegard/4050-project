@@ -1,8 +1,12 @@
 services:
   frontend:
     build: ./frontend
+    # frontend/.env is gitignored, so a fresh clone does not have one and
+    # compose used to abort before anything started. It is only needed for the
+    # optional TMDB key, so treat it as optional.
     env_file:
-      - ./frontend/.env
+      - path: ./frontend/.env
+        required: false
     ports:
       - "3000:3000"
     depends_on:
@@ -11,10 +15,17 @@ services:
   backend:
     build: ./backend
     env_file:
-      - ./frontend/.env
+      - path: ./frontend/.env
+        required: false
     ports:
       - "8080:8080"
     environment:
+      # ShowService compares showtimes against the container's clock. Without a
+      # timezone the container runs on UTC, so scheduling a show for later today
+      # is rejected as "Showtime must be in the future" even though it isn't.
+      # Override with `TZ=Europe/London docker compose up` if you aren't Eastern.
+      TZ: ${TZ:-America/New_York}
+
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cinema?allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: cinema
       SPRING_DATASOURCE_PASSWORD: cinema123
@@ -58,7 +69,10 @@ services:
       MYSQL_USER: cinema
       MYSQL_PASSWORD: cinema123
     ports:
-      - "3306:3306"
+      # Published on 3307 because a locally installed MySQL usually owns 3306,
+      # which stops this container from starting. The backend reaches the DB
+      # over the compose network, so this mapping is only for host-side tools.
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/01_ddl.sql:/docker-entrypoint-initdb.d/01_ddl.sql

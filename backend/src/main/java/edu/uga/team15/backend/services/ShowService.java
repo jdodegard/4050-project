@@ -2,10 +2,11 @@ package edu.uga.team15.backend.services;
 
 import edu.uga.team15.backend.models.Movie;
 import edu.uga.team15.backend.models.Show;
+import edu.uga.team15.backend.models.ShowSeat;
 import edu.uga.team15.backend.models.Showroom;
-import edu.uga.team15.backend.repositories.BookingRepository;
 import edu.uga.team15.backend.repositories.MovieRepository;
 import edu.uga.team15.backend.repositories.ShowRepository;
+import edu.uga.team15.backend.repositories.ShowSeatRepository;
 import edu.uga.team15.backend.repositories.ShowroomRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,14 +32,14 @@ public class ShowService {
     private final ShowRepository showRepository;
     private final ShowroomRepository showroomRepository;
     private final MovieRepository movieRepository;
-    private final BookingRepository bookingRepository;
+    private final ShowSeatRepository showSeatRepository;
 
     public ShowService(ShowRepository showRepository, ShowroomRepository showroomRepository,
-                       MovieRepository movieRepository, BookingRepository bookingRepository) {
+                       MovieRepository movieRepository, ShowSeatRepository showSeatRepository) {
         this.showRepository = showRepository;
         this.showroomRepository = showroomRepository;
         this.movieRepository = movieRepository;
-        this.bookingRepository = bookingRepository;
+        this.showSeatRepository = showSeatRepository;
     }
 
     /** Upcoming showtimes for a movie's detail page. */
@@ -63,7 +65,28 @@ public class ShowService {
                 "showroom", room.getName(),
                 "seatRows", room.getSeatRows(),
                 "seatsPerRow", room.getSeatsPerRow(),
-                "taken", bookingRepository.findTakenSeatLabels(showId));
+                "taken", showSeatRepository.findSeatLabelsByShowIdAndStatus(showId, ShowSeat.Status.BOOKED));
+    }
+
+    /** One ShowSeat per seat in the room, so seat state is a real row per show. Also used by DataSeeder. */
+    public void generateSeatsFor(Show show) {
+        Showroom room = show.getShowroom();
+        List<ShowSeat> seats = new ArrayList<>();
+        for (int r = 0; r < room.getSeatRows(); r++) {
+            char rowLetter = (char) ('A' + r);
+            for (int n = 1; n <= room.getSeatsPerRow(); n++) {
+                seats.add(new ShowSeat(show, rowLetter + String.valueOf(n)));
+            }
+        }
+        showSeatRepository.saveAll(seats);
+    }
+
+    /** Marks one seat sold. Used by seed data and by BookingService after a real payment. */
+    public void markBooked(Long showId, String seatLabel) {
+        showSeatRepository.findByShowIdAndSeatLabel(showId, seatLabel).ifPresent(seat -> {
+            seat.setStatus(ShowSeat.Status.BOOKED);
+            showSeatRepository.save(seat);
+        });
     }
 
     /** Admin scheduling. Date and time come in as strings straight off the form. */
@@ -89,6 +112,7 @@ public class ShowService {
         }
 
         Show show = showRepository.save(new Show(movie, room, startsAt));
+        generateSeatsFor(show);
         log.info("Scheduled show id={} movieId={} showroomId={} startsAt={}",
                 show.getId(), movie.getId(), room.getId(), startsAt);
         return show;

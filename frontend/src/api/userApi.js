@@ -36,6 +36,10 @@ export function deleteAddress() {
   return request('/address', 'DELETE');
 }
 
+export function fetchCards() {
+  return request('/cards');
+}
+
 export function addCard({ cardNumber, expMonth, expYear }) {
   return request('/cards', 'POST', { cardNumber, expMonth, expYear });
 }
@@ -54,4 +58,8 @@ export function addFavorite(movieId) {
 
 export function removeFavorite(movieId) {
   return request(`/favorites/${movieId}`, 'DELETE');
+}
+
+export function fetchBookingHistory() {
+  return request('/bookings');
 }

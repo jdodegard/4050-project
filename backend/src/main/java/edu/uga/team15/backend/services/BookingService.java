@@ -1,14 +1,17 @@
 package edu.uga.team15.backend.services;
 
 import edu.uga.team15.backend.models.Booking;
+import edu.uga.team15.backend.models.PaymentCard;
 import edu.uga.team15.backend.models.Show;
 import edu.uga.team15.backend.models.Showroom;
 import edu.uga.team15.backend.models.Ticket;
 import edu.uga.team15.backend.models.User;
 import edu.uga.team15.backend.repositories.BookingRepository;
+import edu.uga.team15.backend.repositories.PaymentCardRepository;
 import edu.uga.team15.backend.repositories.ShowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,10 +38,26 @@ public class BookingService {
 
     private final ShowRepository showRepository;
     private final BookingRepository bookingRepository;
+    private final EmailService emailService;
+    private final PaymentCardRepository paymentCardRepository;
+    private final CardCipher cardCipher;
+    private final ShowService showService;
 
-    public BookingService(ShowRepository showRepository, BookingRepository bookingRepository) {
+    @Autowired
+    public BookingService(ShowRepository showRepository, BookingRepository bookingRepository,
+                          EmailService emailService, PaymentCardRepository paymentCardRepository,
+                          CardCipher cardCipher, ShowService showService) {
         this.showRepository = showRepository;
         this.bookingRepository = bookingRepository;
+        this.emailService = emailService;
+        this.paymentCardRepository = paymentCardRepository;
+        this.cardCipher = cardCipher;
+        this.showService = showService;
+    }
+
+    /** Kept so existing unit tests that construct this directly still compile and pass unchanged. */
+    public BookingService(ShowRepository showRepository, BookingRepository bookingRepository) {
+        this(showRepository, bookingRepository, null, null, null, null);
     }
 
     /**
@@ -47,6 +66,7 @@ public class BookingService {
      */
     @Transactional
     public Booking processMockPayment(User user, PaymentRequest request) {
+        request = resolveSavedCard(user, request);
         validatePayment(request);
 
         Show show = showRepository.findByIdForUpdate(request.showId())
@@ -86,7 +106,40 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
         log.info("Accepted mock payment reference={} booking id={} user id={} show id={} seats={}",
                 saved.getPaymentReference(), saved.getId(), user.getId(), show.getId(), seats);
+
+        if (showService != null) {
+            for (String seat : seats) {
+                showService.markBooked(show.getId(), seat);
+            }
+        }
+        if (emailService != null) {
+            emailService.sendBookingConfirmation(saved);
+        }
         return saved;
+    }
+
+    /**
+     * Swaps the raw card fields for a saved card's decrypted number/expiry when
+     * the request points at one, so a returning customer doesn't retype it.
+     * The full number is only ever decrypted here, server-side - never sent
+     * back to the client.
+     */
+    private PaymentRequest resolveSavedCard(User user, PaymentRequest request) {
+        if (request == null || request.savedCardId() == null
+                || paymentCardRepository == null || cardCipher == null) {
+            return request;
+        }
+        PaymentCard card = paymentCardRepository.findById(request.savedCardId())
+                .filter(c -> c.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Saved card not found."));
+
+        String decryptedNumber = cardCipher.decrypt(card.getCardNumberEnc());
+        String expiry = String.format("%02d/%02d", card.getExpMonth(), card.getExpYear() % 100);
+        String nameOnCard = isBlank(request.nameOnCard())
+                ? user.getFirstName() + " " + user.getLastName() : request.nameOnCard();
+
+        return new PaymentRequest(request.showId(), request.seats(), request.quantities(),
+                request.email(), nameOnCard, decryptedNumber, expiry, request.cvv(), request.savedCardId());
     }
 
     private void validatePayment(PaymentRequest request) {
@@ -206,7 +259,15 @@ public class BookingService {
 
     public record PaymentRequest(Long showId, List<String> seats, Quantities quantities,
                                  String email, String nameOnCard, String cardNumber,
-                                 String expiry, String cvv) {}
+                                 String expiry, String cvv, Long savedCardId) {
+
+        /** Kept so existing call sites (and the unit tests) building the old 8-field shape still compile. */
+        public PaymentRequest(Long showId, List<String> seats, Quantities quantities,
+                              String email, String nameOnCard, String cardNumber,
+                              String expiry, String cvv) {
+            this(showId, seats, quantities, email, nameOnCard, cardNumber, expiry, cvv, null);
+        }
+    }
 
     public record Quantities(Integer child, Integer adult, Integer senior) {}
 

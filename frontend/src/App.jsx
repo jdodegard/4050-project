@@ -10,6 +10,7 @@ import ActivatePage from './pages/ActivatePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
 import CheckoutPage from './pages/CheckoutPage';
 import PaymentPage from './pages/PaymentPage';
 import AdminPage from './pages/AdminPage';
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/movies" element={<AdminMoviesPage />} />
           <Route path="/admin/showtimes" element={<AdminShowtimesPage />} />

@@ -111,6 +111,18 @@ CREATE TABLE IF NOT EXISTS shows (
     UNIQUE (showroom_id, starts_at)
 );
 
+-- the logical seat/showtime unit: one row per seat per show, generated the
+-- moment a show is scheduled, so seat state is real instead of inferred
+-- from whichever tickets happen to exist
+CREATE TABLE IF NOT EXISTS show_seats (
+    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+    show_id    BIGINT NOT NULL,
+    seat_label VARCHAR(10) NOT NULL,
+    status     VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'BOOKED')),
+    FOREIGN KEY (show_id) REFERENCES shows(id) ON DELETE CASCADE,
+    UNIQUE (show_id, seat_label)
+);
+
 CREATE TABLE IF NOT EXISTS promotions (
     id               BIGINT PRIMARY KEY AUTO_INCREMENT,
     code             VARCHAR(50) NOT NULL UNIQUE,

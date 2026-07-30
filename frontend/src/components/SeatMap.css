@@ -1,4 +1,8 @@
-.seat-map-container { width: 100%; }
+.seat-map-container {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
 
 /* curved glowing screen at the top */
 .screen-stage {
@@ -32,6 +36,9 @@
   perspective: 1100px;
   display: flex;
   justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.5rem;
 }
 
 .seat-grid {
@@ -41,6 +48,7 @@
   align-items: center;
   transform: rotateX(16deg);
   transform-origin: top center;
+  flex: 0 0 auto;
 }
 
 .seat-row { display: flex; align-items: center; gap: 0.5rem; }
@@ -166,6 +174,8 @@
   font-size: 0.8rem;
   color: var(--accent-hi);
   font-weight: 600;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {

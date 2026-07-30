@@ -27,6 +27,7 @@ export default function SeatMap({ seatRows, seatsPerRow, taken, selected, onTogg
                 const isSelected = selected.has(seatId);
                 return (
                   <button
+                    type="button"
                     key={seatId}
                     className={`seat ${isTaken ? 'seat-taken' : isSelected ? 'seat-selected' : 'seat-available'}`}
                     onClick={() => onToggle(seatId)}

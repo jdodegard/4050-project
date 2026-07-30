@@ -73,6 +73,7 @@ Run as one continuous path: movie > showtime > tickets > seat map.
 | 5.7 | Drop a ticket after picking 3 seats | Extra seat auto-deselected |
 | 5.8 | Pick exactly 3 free seats | Checkout button enables, seats listed in the summary |
 | 5.9 | 0 tickets | Seat map disabled, "add tickets" hint |
+| 5.10 | Increase any combination of child/adult/senior tickets to the number of available seats | All ticket `+` buttons disable at the combined limit; another ticket cannot be added |
 
 ## 6. Login gate at checkout
 

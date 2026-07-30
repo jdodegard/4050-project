@@ -75,13 +75,20 @@ public class BookingService {
             throw new IllegalArgumentException("This showtime has already started.");
         }
 
-        List<String> seats = normalizeSeats(request.seats(), show.getShowroom());
         List<TicketSpec> ticketSpecs = ticketSpecs(request.quantities());
+        Set<String> taken = new HashSet<>(bookingRepository.findTakenSeatLabels(show.getId()));
+        int availableSeats = show.getShowroom().getCapacity() - taken.size();
+        if (ticketSpecs.size() > availableSeats) {
+            throw new SeatUnavailableException(
+                    "Only " + availableSeats + " seat" + (availableSeats == 1 ? " is" : "s are")
+                            + " currently available for this showtime.");
+        }
+
+        List<String> seats = normalizeSeats(request.seats(), show.getShowroom());
         if (seats.size() != ticketSpecs.size()) {
             throw new IllegalArgumentException("The number of seats must match the number of tickets.");
         }
 
-        Set<String> taken = new HashSet<>(bookingRepository.findTakenSeatLabels(show.getId()));
         List<String> unavailable = seats.stream().filter(taken::contains).toList();
         if (!unavailable.isEmpty()) {
             throw new SeatUnavailableException(

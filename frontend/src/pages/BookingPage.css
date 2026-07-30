@@ -58,7 +58,7 @@
   align-items: start;
 }
 
-.booking-left { display: flex; flex-direction: column; gap: 1.25rem; }
+.booking-left { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 
 .booking-card {
   background: rgba(12, 25, 41, 0.7);
@@ -66,6 +66,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 1.5rem;
+  min-width: 0;
 }
 
 .booking-section-title {
@@ -124,7 +125,37 @@
 
 .select-seats-hint { margin: 1rem 0 0; font-size: 0.8rem; color: var(--accent-hi); font-weight: 600; }
 
+.ticket-limit-hint {
+  margin: 0.3rem 0 0;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .seat-hint { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
+
+.seat-availability-hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0.6rem 0 0;
+  color: var(--faint);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.seat-availability-hint span {
+  min-width: 0;
+  max-width: 100%;
+}
 
 /* summary */
 .summary-card { position: sticky; top: 76px; }

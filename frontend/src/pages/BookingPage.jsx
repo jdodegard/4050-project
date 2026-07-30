@@ -12,6 +12,15 @@ export const TICKET_TYPES = [
   { key: 'senior', label: 'Senior', price: 9.99,  note: 'Ages 65+' },
 ];
 
+function capQuantities(quantities, limit) {
+  let remaining = Math.max(0, limit);
+  return TICKET_TYPES.reduce((capped, type) => {
+    capped[type.key] = Math.min(quantities[type.key] || 0, remaining);
+    remaining -= capped[type.key];
+    return capped;
+  }, {});
+}
+
 export default function BookingPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -32,28 +41,39 @@ export default function BookingPage() {
       .then(info => {
         setSeatInfo(info);
         const taken = new Set(info.taken);
+        const available = info.seatRows * info.seatsPerRow - taken.size;
+        const cappedQuantities = capQuantities(quantities, available);
+        const cappedTicketCount = Object.values(cappedQuantities).reduce((sum, count) => sum + count, 0);
+        setQuantities(cappedQuantities);
         setSelectedSeats(previous =>
-          new Set(Array.from(previous).filter(seat => !taken.has(seat)))
+          new Set(Array.from(previous).filter(seat => !taken.has(seat)).slice(0, cappedTicketCount))
         );
       })
       .catch(() => setSeatError(true));
   }, [show?.id]);
 
   const totalTickets = quantities.child + quantities.adult + quantities.senior;
+  const availableSeats = seatInfo
+    ? seatInfo.seatRows * seatInfo.seatsPerRow - seatInfo.taken.length
+    : 0;
   const subtotal = TICKET_TYPES.reduce((sum, t) => sum + t.price * quantities[t.key], 0);
   const bookingFee = totalTickets > 0 ? 1.5 * totalTickets : 0;
   const tax = subtotal * 0.08;
   const total = subtotal + bookingFee + tax;
 
-  function changeQty(key, delta) {
-    const next = { ...quantities, [key]: Math.max(0, quantities[key] + delta) };
-    setQuantities(next);
+  useEffect(() => {
+    setSelectedSeats(previous => {
+      if (previous.size <= totalTickets) return previous;
+      return new Set(Array.from(previous).slice(0, totalTickets));
+    });
+  }, [totalTickets]);
 
-    // dropping tickets can leave too many seats picked - trim from the end
-    const allowed = next.child + next.adult + next.senior;
-    if (selectedSeats.size > allowed) {
-      setSelectedSeats(new Set(Array.from(selectedSeats).slice(0, allowed)));
-    }
+  function changeQty(key, delta) {
+    setQuantities(current => {
+      const currentTotal = current.child + current.adult + current.senior;
+      if (delta > 0 && (!seatInfo || currentTotal >= availableSeats)) return current;
+      return { ...current, [key]: Math.max(0, current[key] + delta) };
+    });
   }
 
   function toggleSeat(seatId) {
@@ -120,6 +140,7 @@ export default function BookingPage() {
                   <span className="ticket-price">${t.price.toFixed(2)}</span>
                   <div className="qty-control">
                     <button
+                      type="button"
                       className="qty-btn"
                       onClick={() => changeQty(t.key, -1)}
                       disabled={quantities[t.key] === 0}
@@ -128,8 +149,10 @@ export default function BookingPage() {
                     </button>
                     <span className="qty-value">{quantities[t.key]}</span>
                     <button
+                      type="button"
                       className="qty-btn"
                       onClick={() => changeQty(t.key, 1)}
+                      disabled={!seatInfo || totalTickets >= availableSeats}
                     >
                       +
                     </button>
@@ -139,8 +162,26 @@ export default function BookingPage() {
             </div>
             {totalTickets > 0 && (
               <p className="select-seats-hint">
-                Select {totalTickets} seat{totalTickets !== 1 ? 's' : ''} below
-                {selectedSeats.size > 0 && ` (${selectedSeats.size} chosen)`}
+                {selectedSeats.size === totalTickets
+                  ? `All ${totalTickets} ticket${totalTickets !== 1 ? 's have' : ' has'} a seat`
+                  : `Select ${totalTickets} seat${totalTickets !== 1 ? 's' : ''} below (${selectedSeats.size} chosen)`}
+              </p>
+            )}
+            {totalTickets > 0
+              && selectedSeats.size === totalTickets
+              && totalTickets < availableSeats && (
+                <p className="ticket-limit-hint">
+                  Add another ticket above before selecting another available seat.
+                </p>
+              )}
+            {seatInfo && (
+              <p className="seat-availability-hint">
+                <span>
+                  {availableSeats} seat{availableSeats !== 1 ? 's' : ''} currently available.
+                </span>
+                {totalTickets >= availableSeats && availableSeats > 0
+                  ? <span>You have selected the maximum available.</span>
+                  : ''}
               </p>
             )}
           </section>

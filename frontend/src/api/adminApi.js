@@ -43,3 +43,7 @@ export function fetchPromotions() {
 export function createPromotion(promo) {
   return post('/promotions', promo);
 }
+
+export function fetchSubscribers() {
+  return get('/subscribers');
+}

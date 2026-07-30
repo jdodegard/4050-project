@@ -71,6 +71,14 @@ public class AdminController {
         return promotionService.getAll();
     }
 
+    // the accounts a new promo actually goes out to. read only, same list
+    // PromotionService emails.
+    @GetMapping("/subscribers")
+    public List<User> getSubscribers(HttpSession session) {
+        requireAdmin(session);
+        return userRepository.findByPromoOptInTrue();
+    }
+
     record NewPromotion(String code, String description, Integer discountPercent,
                         String startDate, String endDate) {}
 

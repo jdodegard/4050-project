@@ -7,6 +7,7 @@ import {
   filterMoviesByGenre,
   fetchGenres,
 } from '../api/moviesApi';
+import { fetchUpcomingShows } from '../api/showsApi';
 import './HomePage.css';
 
 const SHOW_DATES = ['Any Date', 'Today', 'This Week', 'This Weekend', 'Next Week'];
@@ -15,6 +16,36 @@ const HERO_WORDS = ['Perfect', 'Epic', 'Cinematic', 'Legendary', 'Unforgettable'
 function isNowPlaying(movie) {
   const s = (movie.status || '').toUpperCase();
   return s.includes('NOW') || s.includes('RUNNING') || s.includes('CURRENT') || s === 'PLAYING';
+}
+
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+// the window each dropdown option covers, as [from, to). null means no filtering.
+// weeks run monday to sunday, which is how the schedule reads to a person.
+function dateWindow(label) {
+  const today = startOfDay(new Date());
+  const day = (today.getDay() + 6) % 7; // 0 = monday
+  const plus = n => new Date(today.getTime() + n * 86400000);
+
+  switch (label) {
+    case 'Today':
+      return [today, plus(1)];
+    case 'This Week':
+      return [today, plus(7 - day)];
+    case 'This Weekend': {
+      // saturday and sunday of the current week, or today onward if we're in it
+      const sat = plus(Math.max(0, 5 - day));
+      return [day >= 5 ? today : sat, plus(7 - day)];
+    }
+    case 'Next Week':
+      return [plus(7 - day), plus(14 - day)];
+    default:
+      return null;
+  }
 }
 
 export default function HomePage() {
@@ -27,7 +58,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [genre, setGenre] = useState('All');
-  const [selectedDate] = useState('Any Date');
+  const [selectedDate, setSelectedDate] = useState('Any Date');
+  const [shows, setShows] = useState([]);
   const [wordIdx, setWordIdx] = useState(0);
   const heroRef = useRef(null);
 
@@ -51,6 +83,14 @@ export default function HomePage() {
     fetchGenres()
       .then(list => setGenres(['All', ...list]))
       .catch(() => setGenres(['All']));
+  }, []);
+
+  // the whole upcoming schedule, so picking a date can narrow the grid without
+  // another round trip every time the dropdown changes
+  useEffect(() => {
+    fetchUpcomingShows()
+      .then(setShows)
+      .catch(() => setShows([]));
   }, []);
 
   // any time the search text or chosen genre changes we go back to the backend.
@@ -90,12 +130,26 @@ export default function HomePage() {
     return () => { alive = false; clearTimeout(t); };
   }, [urlSearch, genre]);
 
-  const nowPlaying = movies.filter(isNowPlaying);
-  const comingSoon = movies.filter(m => !isNowPlaying(m));
-  const isFiltering = urlSearch.trim() || genre !== 'All';
+  // which movies actually have a screening inside the chosen window
+  const window = dateWindow(selectedDate);
+  const datedIds = window && new Set(
+    shows
+      .filter(s => {
+        const t = new Date(s.startsAt);
+        return t >= window[0] && t < window[1];
+      })
+      .map(s => s.movie.id)
+  );
+
+  const visible = datedIds ? movies.filter(m => datedIds.has(m.id)) : movies;
+
+  const nowPlaying = visible.filter(isNowPlaying);
+  const comingSoon = visible.filter(m => !isNowPlaying(m));
+  const isFiltering = urlSearch.trim() || genre !== 'All' || selectedDate !== 'Any Date';
 
   function clearAll() {
     setGenre('All');
+    setSelectedDate('Any Date');
     navigate('/');
   }
 
@@ -145,14 +199,12 @@ export default function HomePage() {
           </select>
         </div>
 
-        <div className="filter-group filter-group-disabled">
-          <label>Show Date <span className="coming-label">(coming soon)</span></label>
+        <div className="filter-group">
+          <label>Show Date</label>
           <select
             value={selectedDate}
-            onChange={() => {}}
+            onChange={e => setSelectedDate(e.target.value)}
             className="filter-select"
-            disabled
-            title="show date filter lands next sprint"
           >
             {SHOW_DATES.map(d => <option key={d} value={d}>{d}</option>)}
           </select>

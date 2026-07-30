@@ -9,6 +9,11 @@ export function fetchShowsForMovie(movieId) {
   return fetch(`${BASE_URL}/shows?movieId=${movieId}`).then(handleResponse);
 }
 
+/** Every upcoming show, used by the home page date filter. */
+export function fetchUpcomingShows() {
+  return fetch(`${BASE_URL}/shows`).then(handleResponse);
+}
+
 export function fetchSeatMap(showId) {
   return fetch(`${BASE_URL}/shows/${showId}/seats`).then(handleResponse);
 }

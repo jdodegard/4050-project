@@ -47,3 +47,11 @@ export function createPromotion(promo) {
 export function fetchSubscribers() {
   return get('/subscribers');
 }
+
+export function fetchUsers() {
+  return get('/users');
+}
+
+export function setUserStatus(id, status) {
+  return post(`/users/${id}/status`, { status });
+}

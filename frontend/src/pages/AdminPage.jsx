@@ -55,7 +55,7 @@ const SECTIONS = [
   {
     title: 'Manage Users',
     blurb: 'Manage customer accounts and suspensions.',
-    to: null,   // not part of this sprint
+    to: '/admin/users',
     icon: (
       // two people
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">

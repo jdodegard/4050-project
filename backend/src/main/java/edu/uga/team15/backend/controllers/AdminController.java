@@ -5,6 +5,7 @@ import edu.uga.team15.backend.repositories.UserRepository;
 import edu.uga.team15.backend.services.MovieService;
 import edu.uga.team15.backend.services.PromotionService;
 import edu.uga.team15.backend.services.ShowService;
+import edu.uga.team15.backend.services.UserAdminService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,16 @@ public class AdminController {
     private final MovieService movieService;
     private final ShowService showService;
     private final PromotionService promotionService;
+    private final UserAdminService userAdminService;
     private final UserRepository userRepository;
 
     public AdminController(MovieService movieService, ShowService showService,
-                           PromotionService promotionService, UserRepository userRepository) {
+                           PromotionService promotionService, UserAdminService userAdminService,
+                           UserRepository userRepository) {
         this.movieService = movieService;
         this.showService = showService;
         this.promotionService = promotionService;
+        this.userAdminService = userAdminService;
         this.userRepository = userRepository;
     }
 
@@ -77,6 +81,20 @@ public class AdminController {
     public List<User> getSubscribers(HttpSession session) {
         requireAdmin(session);
         return userRepository.findByPromoOptInTrue();
+    }
+
+    @GetMapping("/users")
+    public List<User> getUsers(HttpSession session) {
+        requireAdmin(session);
+        return userAdminService.getAll();
+    }
+
+    record StatusChange(String status) {}
+
+    @PostMapping("/users/{id}/status")
+    public User setUserStatus(@PathVariable Long id, @RequestBody StatusChange req, HttpSession session) {
+        requireAdmin(session);
+        return userAdminService.setStatus(id, req.status(), (Long) session.getAttribute("userId"));
     }
 
     record NewPromotion(String code, String description, Integer discountPercent,

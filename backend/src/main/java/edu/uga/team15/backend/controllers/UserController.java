@@ -1,8 +1,10 @@
 package edu.uga.team15.backend.controllers;
 
+import edu.uga.team15.backend.models.Booking;
 import edu.uga.team15.backend.models.Movie;
 import edu.uga.team15.backend.models.PaymentCard;
 import edu.uga.team15.backend.models.User;
+import edu.uga.team15.backend.repositories.BookingRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
 import edu.uga.team15.backend.services.AuthService;
 import edu.uga.team15.backend.services.ProfileService;
@@ -27,12 +29,14 @@ public class UserController {
     private final UserRepository userRepository;
     private final ProfileService profileService;
     private final AuthService authService;
+    private final BookingRepository bookingRepository;
 
     public UserController(UserRepository userRepository, ProfileService profileService,
-                          AuthService authService) {
+                          AuthService authService, BookingRepository bookingRepository) {
         this.userRepository = userRepository;
         this.profileService = profileService;
         this.authService = authService;
+        this.bookingRepository = bookingRepository;
     }
 
     /** Full profile for the edit form: info + address + masked cards. */
@@ -108,6 +112,12 @@ public class UserController {
     public Map<String, String> deleteCard(@PathVariable Long id, HttpSession session) {
         profileService.deleteCard(currentUser(session), id);
         return Map.of("message", "Card removed.");
+    }
+
+    /** Order history: every booking this user has made, most recent first. */
+    @GetMapping("/bookings")
+    public List<Booking> getBookings(HttpSession session) {
+        return bookingRepository.findByUserIdOrderByCreatedAtDesc(currentUser(session).getId());
     }
 
     @GetMapping("/favorites")

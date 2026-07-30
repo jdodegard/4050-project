@@ -14,9 +14,11 @@ import edu.uga.team15.backend.repositories.BookingRepository;
 import edu.uga.team15.backend.repositories.MovieRepository;
 import edu.uga.team15.backend.repositories.PaymentCardRepository;
 import edu.uga.team15.backend.repositories.ShowRepository;
+import edu.uga.team15.backend.repositories.ShowSeatRepository;
 import edu.uga.team15.backend.repositories.ShowroomRepository;
 import edu.uga.team15.backend.repositories.UserRepository;
 import edu.uga.team15.backend.services.CardCipher;
+import edu.uga.team15.backend.services.ShowService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -44,6 +46,8 @@ public class DataSeeder implements CommandLineRunner {
     private final ShowroomRepository showroomRepository;
     private final ShowRepository showRepository;
     private final BookingRepository bookingRepository;
+    private final ShowSeatRepository showSeatRepository;
+    private final ShowService showService;
     private final CardCipher cardCipher;
 
     public DataSeeder(MovieRepository movieRepository,
@@ -52,6 +56,8 @@ public class DataSeeder implements CommandLineRunner {
                       ShowroomRepository showroomRepository,
                       ShowRepository showRepository,
                       BookingRepository bookingRepository,
+                      ShowSeatRepository showSeatRepository,
+                      ShowService showService,
                       CardCipher cardCipher) {
         this.movieRepository = movieRepository;
         this.userRepository = userRepository;
@@ -59,6 +65,8 @@ public class DataSeeder implements CommandLineRunner {
         this.showroomRepository = showroomRepository;
         this.showRepository = showRepository;
         this.bookingRepository = bookingRepository;
+        this.showSeatRepository = showSeatRepository;
+        this.showService = showService;
         this.cardCipher = cardCipher;
     }
 
@@ -179,9 +187,11 @@ public class DataSeeder implements CommandLineRunner {
         cardUser.setStatus(UserStatus.ACTIVE);
         User savedCardUser = userRepository.save(cardUser);
 
-        PaymentCard card1 = new PaymentCard(savedCardUser, "Visa", cardCipher.encrypt("4111111111113456"), "3456", 3, 2030);
-        PaymentCard card2 = new PaymentCard(savedCardUser, "Mastercard", cardCipher.encrypt("5105105105102670"), "2670", 4, 2028);
-        PaymentCard card3 = new PaymentCard(savedCardUser, "Amex", cardCipher.encrypt("340000000009374"), "9374", 9, 2026);
+        // Luhn-valid 16-digit mock numbers - BookingService runs saved cards through
+        // the same validation as a freshly typed one, so these have to actually pass it.
+        PaymentCard card1 = new PaymentCard(savedCardUser, "Visa", cardCipher.encrypt("4111111111111111"), "1111", 3, 2030);
+        PaymentCard card2 = new PaymentCard(savedCardUser, "Mastercard", cardCipher.encrypt("5500000000000004"), "0004", 4, 2028);
+        PaymentCard card3 = new PaymentCard(savedCardUser, "Amex", cardCipher.encrypt("4012888888881881"), "1881", 9, 2026);
         paymentCardRepository.saveAll(List.of(card1, card2, card3));
 
         // verified user with favorites for test8 & test9
@@ -225,6 +235,7 @@ public class DataSeeder implements CommandLineRunner {
         }
         if (showRepository.count() > 0) {
             bookingRepository.deleteAll();   // tickets cascade off the booking
+            showSeatRepository.deleteAll();
             showRepository.deleteAll();
             System.out.println("Seeded showtimes had expired, rebuilding the schedule.");
         }
@@ -248,8 +259,9 @@ public class DataSeeder implements CommandLineRunner {
                 slot++;
             }
         }
-        showRepository.saveAll(shows);
-        System.out.println("Seeded " + shows.size() + " showtimes.");
+        List<Show> saved = showRepository.saveAll(shows);
+        saved.forEach(showService::generateSeatsFor);
+        System.out.println("Seeded " + saved.size() + " showtimes and their seat maps.");
     }
 
     /** A couple of sold seats on the earliest shows so seat maps aren't all green. */
@@ -275,6 +287,15 @@ public class DataSeeder implements CommandLineRunner {
         second.addTicket(new Ticket("A2", "SENIOR", 9.99));
 
         bookingRepository.saveAll(List.of(first, second));
+
+        // keep the ShowSeat inventory in sync with what was just sold
+        for (String seat : List.of("C4", "C5", "C6")) {
+            showService.markBooked(shows.get(0).getId(), seat);
+        }
+        for (String seat : List.of("A1", "A2")) {
+            showService.markBooked(shows.get(1).getId(), seat);
+        }
+
         System.out.println("Seeded demo bookings on the first two shows.");
     }
 }

@@ -13,4 +13,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     /** Seat labels already sold for a show - what the seat map greys out. */
     @Query("SELECT t.seatLabel FROM Ticket t WHERE t.booking.show.id = :showId AND t.booking.status <> 'CANCELLED'")
     List<String> findTakenSeatLabels(Long showId);
+
+    /** A signed-in user's order history, most recent first. */
+    List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

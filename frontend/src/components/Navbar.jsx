@@ -151,6 +151,7 @@ export default function Navbar() {
               <div className="nav-user-menu">
                 <Link to="/profile" className="nav-menu-item" onClick={() => setMenuOpen(false)}>My Profile</Link>
                 <Link to="/profile#favorites" className="nav-menu-item" onClick={() => setMenuOpen(false)}>My Favorites</Link>
+                <Link to="/orders" className="nav-menu-item" onClick={() => setMenuOpen(false)}>Order History</Link>
                 <button className="nav-menu-item nav-menu-signout" onClick={handleSignOut}>Sign Out</button>
               </div>
             )}

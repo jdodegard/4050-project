@@ -1,6 +1,8 @@
 package edu.uga.team15.backend.services;
 
+import edu.uga.team15.backend.models.Booking;
 import edu.uga.team15.backend.models.Promotion;
+import edu.uga.team15.backend.models.Ticket;
 import edu.uga.team15.backend.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import java.time.format.DateTimeFormatter;
 
 /**
  * Sends the system emails: account confirmation, password reset, and the
@@ -63,6 +67,29 @@ public class EmailService {
                 + "Valid " + promo.getStartDate() + " through " + promo.getEndDate() + ".\n\n"
                 + "You're getting this because you opted in to promotional emails. "
                 + "You can turn these off any time from your profile page.");
+    }
+
+    private static final DateTimeFormatter SHOWTIME_FORMAT = DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a");
+
+    /** Sent right after a successful mock payment - the tickets/seats/total receipt. */
+    public void sendBookingConfirmation(Booking booking) {
+        StringBuilder ticketLines = new StringBuilder();
+        for (Ticket ticket : booking.getTickets()) {
+            ticketLines.append("  - ").append(ticket.getSeatLabel())
+                    .append(" (").append(ticket.getTicketType()).append(") - $")
+                    .append(String.format("%.2f", ticket.getPrice())).append("\n");
+        }
+
+        send(booking.getConfirmationEmail(), "Your CES booking is confirmed",
+                "Hi " + booking.getUser().getFirstName() + ",\n\n"
+                + "Your booking is confirmed! Here are the details:\n\n"
+                + "Movie: " + booking.getShow().getMovie().getTitle() + "\n"
+                + "Showtime: " + booking.getShow().getStartsAt().format(SHOWTIME_FORMAT) + "\n"
+                + "Room: " + booking.getShow().getShowroom().getName() + "\n\n"
+                + "Tickets:\n" + ticketLines
+                + "\nTotal paid: $" + String.format("%.2f", booking.getTotalAmount()) + "\n"
+                + "Booking #" + booking.getId() + " - " + booking.getPaymentReference() + "\n\n"
+                + "Enjoy the show!");
     }
 
     /** Sent whenever profile info, password, address or cards change. */
